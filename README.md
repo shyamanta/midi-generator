@@ -2,6 +2,8 @@
 
 A professional, browser-based MIDI composition generator that creates genre-aware musical parts with proper phrasing, harmony, and arrangement-ready exports.
 
+**Live Demo:** [https://shyamanta.github.io/midi-generator/](https://shyamanta.github.io/midi-generator/)
+
 ## Features
 
 - **15+ Genres:** Pop, EDM (8 sub-genres), Ambient, Hip-hop, Lo-fi, Cinematic, R&B, Rock
