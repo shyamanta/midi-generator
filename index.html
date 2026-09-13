@@ -298,21 +298,21 @@ function generate(){
   const snapToScale=n=>{const oct=n-((n%12)+12)%12;const pc=((n%12)+12)%12;let best=sc[0],bestD=12;for(const s of sc){const d=Math.abs(pc-s);if(d<bestD){bestD=d;best=s}}return oct+best};
 
   const melodicProfiles={
-    pop:{rhythm:[[4,2,2,4,2,2],[2,2,4,2,2,4],[4,4,2,2,4],[6,2,4,2,2]],stepChance:.75,chordToneChance:.8,leapChance:.15,repeatChance:.4,range:[60,84],contour:'arch',phraseEnd:'descend'},
-    hiphop:{rhythm:[[4,2,2,4,2,2],[6,2,4,2,2],[2,4,2,2,4,2],[4,4,4,4]],stepChance:.6,chordToneChance:.4,leapChance:.25,repeatChance:.5,range:[55,79],contour:'flat',phraseEnd:'repeat'},
-    rnb:{rhythm:[[4,2,2,2,2,4],[6,2,4,2,2],[4,2,2,4,2,2],[2,2,4,2,2,4]],stepChance:.7,chordToneChance:.7,leapChance:.2,repeatChance:.3,range:[60,84],contour:'wave',phraseEnd:'resolve'},
-    ambient:{rhythm:[[12,4],[8,8],[16],[8,4,4]],stepChance:.85,chordToneChance:.85,leapChance:.1,repeatChance:.5,range:[55,72],contour:'flat',phraseEnd:'sustain'},
-    rock:{rhythm:[[4,2,2,4,2,2],[4,4,4,4],[6,2,4,2,2],[4,2,2,2,2,4]],stepChance:.6,chordToneChance:.65,leapChance:.3,repeatChance:.25,range:[55,79],contour:'arch',phraseEnd:'leap'},
-    lofi:{rhythm:[[6,2,4,2,2],[8,4,4],[4,4,4,4],[6,2,8]],stepChance:.8,chordToneChance:.75,leapChance:.1,repeatChance:.45,range:[55,72],contour:'flat',phraseEnd:'descend'},
-    cinematic:{rhythm:[[8,4,4],[12,4],[8,8],[4,4,8]],stepChance:.65,chordToneChance:.7,leapChance:.35,repeatChance:.2,range:[48,84],contour:'dramatic',phraseEnd:'ascend'},
-    house:{rhythm:[[4,2,2,4,2,2],[4,2,2,2,2,4],[2,2,4,2,2,4],[4,4,2,2,4]],stepChance:.7,chordToneChance:.75,leapChance:.15,repeatChance:.35,range:[60,84],contour:'build',phraseEnd:'resolve'},
-    basshouse:{rhythm:[[4,2,2,4,2,2],[6,2,4,2,2],[4,2,2,2,2,4],[4,4,4,4]],stepChance:.65,chordToneChance:.7,leapChance:.25,repeatChance:.35,range:[55,79],contour:'build',phraseEnd:'resolve'},
-    progressive:{rhythm:[[6,2,4,2,2],[4,2,2,4,2,2],[8,4,4],[4,4,2,2,4]],stepChance:.75,chordToneChance:.8,leapChance:.1,repeatChance:.5,range:[60,84],contour:'build',phraseEnd:'resolve'},
-    dubstep:{rhythm:[[8,4,4],[12,4],[8,8],[4,8,4]],stepChance:.55,chordToneChance:.6,leapChance:.35,repeatChance:.3,range:[55,79],contour:'dramatic',phraseEnd:'leap'},
-    trance:{rhythm:[[4,2,2,4,2,2],[4,2,2,2,2,4],[4,2,2,4,2,2],[2,2,4,2,2,4]],stepChance:.8,chordToneChance:.85,leapChance:.1,repeatChance:.4,range:[60,84],contour:'build',phraseEnd:'ascend'},
-    futurebass:{rhythm:[[6,2,4,2,2],[4,4,4,4],[8,4,4],[4,2,2,4,2,2]],stepChance:.75,chordToneChance:.8,leapChance:.15,repeatChance:.4,range:[60,84],contour:'wave',phraseEnd:'resolve'},
-    techno:{rhythm:[[4,2,2,4,2,2],[4,2,2,2,2,4],[4,2,2,4,2,2],[4,2,2,2,2,4]],stepChance:.65,chordToneChance:.7,leapChance:.2,repeatChance:.45,range:[55,79],contour:'flat',phraseEnd:'repeat'},
-    dnb:{rhythm:[[2,2,2,2,4,2,2],[4,2,2,4,2,2],[2,2,4,2,2,4],[4,2,2,2,2,4]],stepChance:.65,chordToneChance:.7,leapChance:.2,repeatChance:.35,range:[60,84],contour:'build',phraseEnd:'resolve'}
+    pop:{rhythm:[[4,2,2,4,2,2],[2,2,4,2,2,4],[4,4,2,2,4],[6,2,4,2,2],[2,4,2,2,4,2],[4,2,2,2,2,4],[3,3,2,2,2,4],[2,2,2,4,2,4],[4,2,4,2,2,2],[6,2,2,2,2,4],[8,4,4],[4,2,2,2,4,2]],stepChance:.75,chordToneChance:.8,leapChance:.15,repeatChance:.4,range:[60,84],contour:'arch',phraseEnd:'descend'},
+    hiphop:{rhythm:[[4,2,2,4,2,2],[6,2,4,2,2],[2,4,2,2,4,2],[4,4,4,4],[8,4,4],[2,2,4,2,2,4],[4,2,4,4,2,2],[6,4,2,2,4],[3,3,3,3,2,2],[2,2,2,2,4,4],[10,4,2],[4,2,2,2,2,4]],stepChance:.6,chordToneChance:.4,leapChance:.25,repeatChance:.5,range:[55,79],contour:'flat',phraseEnd:'repeat'},
+    rnb:{rhythm:[[4,2,2,2,2,4],[6,2,4,2,2],[4,2,2,4,2,2],[2,2,4,2,2,4],[3,3,2,4,2,2],[2,4,4,2,2,4],[4,2,4,2,2,2],[8,4,4],[6,2,2,2,2,4],[2,2,2,2,4,4],[4,4,2,2,2,2],[10,2,4]],stepChance:.7,chordToneChance:.7,leapChance:.2,repeatChance:.3,range:[60,84],contour:'wave',phraseEnd:'resolve'},
+    ambient:{rhythm:[[12,4],[8,8],[16],[8,4,4],[10,6],[6,6,4],[14,2],[8,8],[6,4,6],[16],[12,4],[8,4,4]],stepChance:.85,chordToneChance:.85,leapChance:.1,repeatChance:.5,range:[55,72],contour:'flat',phraseEnd:'sustain'},
+    rock:{rhythm:[[4,2,2,4,2,2],[4,4,4,4],[6,2,4,2,2],[4,2,2,2,2,4],[2,4,2,2,4,2],[4,2,4,2,2,2],[6,4,2,2,4],[8,4,4],[2,2,4,4,2,2],[4,2,2,2,4,2],[3,3,2,2,2,4],[10,2,4]],stepChance:.6,chordToneChance:.65,leapChance:.3,repeatChance:.25,range:[55,79],contour:'arch',phraseEnd:'leap'},
+    lofi:{rhythm:[[6,2,4,2,2],[8,4,4],[4,4,4,4],[6,2,8],[10,4,2],[4,2,2,2,2,4],[8,2,4,2],[6,4,4,2],[2,2,4,4,4],[12,4],[4,2,6,2,2],[8,8]],stepChance:.8,chordToneChance:.75,leapChance:.1,repeatChance:.45,range:[55,72],contour:'flat',phraseEnd:'descend'},
+    cinematic:{rhythm:[[8,4,4],[12,4],[8,8],[4,4,8],[16],[6,6,4],[10,6],[14,2],[8,4,4],[4,8,4],[12,4],[6,4,6]],stepChance:.65,chordToneChance:.7,leapChance:.35,repeatChance:.2,range:[48,84],contour:'dramatic',phraseEnd:'ascend'},
+    house:{rhythm:[[4,2,2,4,2,2],[4,2,2,2,2,4],[2,2,4,2,2,4],[4,4,2,2,4],[3,3,2,2,2,4],[2,4,4,2,2,4],[4,2,4,2,2,2],[6,2,2,2,2,4],[2,2,2,4,2,4],[4,2,2,2,4,2],[8,4,4],[6,4,2,2,4]],stepChance:.7,chordToneChance:.75,leapChance:.15,repeatChance:.35,range:[60,84],contour:'build',phraseEnd:'resolve'},
+    basshouse:{rhythm:[[4,2,2,4,2,2],[6,2,4,2,2],[4,2,2,2,2,4],[4,4,4,4],[2,4,2,2,4,2],[4,2,4,2,2,2],[8,4,4],[3,3,3,3,2,2],[6,4,2,2,4],[2,2,4,4,2,2],[4,2,2,2,4,2],[10,2,4]],stepChance:.65,chordToneChance:.7,leapChance:.25,repeatChance:.35,range:[55,79],contour:'build',phraseEnd:'resolve'},
+    progressive:{rhythm:[[6,2,4,2,2],[4,2,2,4,2,2],[8,4,4],[4,4,2,2,4],[3,3,2,2,2,4],[2,2,4,2,2,4],[4,2,4,2,2,2],[6,4,2,2,4],[2,4,4,2,2,4],[4,2,2,2,4,2],[10,4,2],[8,8]],stepChance:.75,chordToneChance:.8,leapChance:.1,repeatChance:.5,range:[60,84],contour:'build',phraseEnd:'resolve'},
+    dubstep:{rhythm:[[8,4,4],[12,4],[8,8],[4,8,4],[6,6,4],[10,2,4],[4,4,4,4],[14,2],[6,4,2,4],[8,4,4],[12,4],[4,2,2,8]],stepChance:.55,chordToneChance:.6,leapChance:.35,repeatChance:.3,range:[55,79],contour:'dramatic',phraseEnd:'leap'},
+    trance:{rhythm:[[4,2,2,4,2,2],[4,2,2,2,2,4],[4,2,2,4,2,2],[2,2,4,2,2,4],[3,3,2,2,2,4],[2,4,4,2,2,4],[4,2,4,2,2,2],[6,2,2,2,2,4],[2,2,2,4,2,4],[4,2,2,2,4,2],[8,4,4],[6,4,2,2,4]],stepChance:.8,chordToneChance:.85,leapChance:.1,repeatChance:.4,range:[60,84],contour:'build',phraseEnd:'ascend'},
+    futurebass:{rhythm:[[6,2,4,2,2],[4,4,4,4],[8,4,4],[4,2,2,4,2,2],[2,2,4,2,2,4],[3,3,2,2,2,4],[2,4,4,2,2,4],[4,2,4,2,2,2],[6,4,2,2,4],[2,2,2,4,2,4],[10,4,2],[8,8]],stepChance:.75,chordToneChance:.8,leapChance:.15,repeatChance:.4,range:[60,84],contour:'wave',phraseEnd:'resolve'},
+    techno:{rhythm:[[4,2,2,4,2,2],[4,2,2,2,2,4],[4,2,2,4,2,2],[4,2,2,2,2,4],[3,3,2,2,2,4],[2,4,4,2,2,4],[4,2,4,2,2,2],[6,2,2,2,2,4],[2,2,2,4,2,4],[4,2,2,2,4,2],[8,4,4],[6,4,2,2,4]],stepChance:.65,chordToneChance:.7,leapChance:.2,repeatChance:.45,range:[55,79],contour:'flat',phraseEnd:'repeat'},
+    dnb:{rhythm:[[2,2,2,2,4,2,2],[4,2,2,4,2,2],[2,2,4,2,2,4],[4,2,2,2,2,4],[3,3,2,2,2,4],[2,4,4,2,2,4],[4,2,4,2,2,2],[6,2,2,2,2,4],[2,2,2,4,2,4],[4,2,2,2,4,2],[8,4,4],[6,4,2,2,4]],stepChance:.65,chordToneChance:.7,leapChance:.2,repeatChance:.35,range:[60,84],contour:'build',phraseEnd:'resolve'}
   };
 
   // Chord extension: pick ONCE per genre, consistent across all bars
