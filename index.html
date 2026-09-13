@@ -273,7 +273,24 @@ async function saveFolder(ids,drumIds,label){
 }
 function generate(){
   const root=keyRoots[$('key').selectedIndex],sc=scales[$('scale').value],bars=+$('bars').value,tempo=+$('tempo').value,style=$('style').value==='edm'?$('edmStyle').value:$('style').value,r=rng(+$('seed').value||1),mB=+$('melodyOct').value+root,bB=+$('bassOct').value+root,isEDM=['house','basshouse','progressive','dubstep','trance','futurebass','techno','dnb'].includes(style),ticksPerBar=1920,timeSig='4/4';
-  const pats={pop:[0,4,5,3],ambient:[0,5,3,4],house:[0,5,1,4],basshouse:[0,3,5,4],progressive:[0,4,5,3],dubstep:[0,3,5,4],trance:[0,5,1,4],futurebass:[0,5,3,4],techno:[0,1,3,4],dnb:[0,5,1,4],hiphop:[0,3,5,4],lofi:[0,3,5,4],cinematic:[0,5,3,4],rnb:[0,5,1,4],rock:[0,4,5,3]}[style];
+  const patPools={
+    pop:[[0,4,5,3],[5,3,0,4],[0,3,4,4],[3,4,5,3]],
+    ambient:[[0,5,3,4],[0,3,5,4],[5,3,4,0]],
+    house:[[0,5,1,4],[0,3,5,4],[5,1,4,0]],
+    basshouse:[[0,3,5,4],[0,5,3,4],[3,5,4,0]],
+    progressive:[[0,4,5,3],[5,3,0,4],[0,3,4,5]],
+    dubstep:[[0,3,5,4],[0,5,3,4],[3,5,4,0]],
+    trance:[[0,5,1,4],[5,1,4,0],[0,3,5,4]],
+    futurebass:[[0,5,3,4],[5,3,0,4],[0,4,5,3]],
+    techno:[[0,1,3,4],[0,3,4,1],[1,3,4,0]],
+    dnb:[[0,5,1,4],[5,1,4,0],[0,3,5,4]],
+    hiphop:[[0,3,5,4],[0,5,3,4],[3,5,4,0]],
+    lofi:[[0,3,5,4],[5,3,0,4],[0,5,3,4]],
+    cinematic:[[0,5,3,4],[0,3,5,4],[5,3,4,0]],
+    rnb:[[0,5,1,4],[5,1,4,0],[0,3,5,4]],
+    rock:[[0,4,5,3],[0,3,4,5],[4,5,3,0]]
+  }[style]||[[0,4,5,3]];
+  const pats=patPools[Math.floor(r()*patPools.length)];
   const prog=Array.from({length:bars},(_,i)=>pats[i%pats.length]);
   const cN=[],bN=[],mN=[],hN=[],aN=[],pdN=[],kN=[],sN=[],clN=[],cHN=[],oHN=[],crN=[],rN=[];
   let motif=[],motifRhy=[];
@@ -375,24 +392,29 @@ function generate(){
     }
 
     // ─── ARPEGGIATOR ───
-    const aS=style==='dubstep'?4:style==='dnb'?16:8,aL=1920/aS,aO=style==='techno'?[0,1,2,1]:style==='progressive'?[0,1,2,3,2,1]:[0,1,2,1,2,1,0,1];
+    const arpPatterns=[[0,1,2,1,2,1,0,1],[0,2,1,2,0,1,2,1],[0,1,2,3,2,1,0,1],[0,2,3,2,1,2,3,2]];
+    const aS=style==='dubstep'?4:style==='dnb'?16:8,aL=1920/aS,aO=style==='techno'?[0,1,2,1]:style==='progressive'?[0,1,2,3,2,1]:arpPatterns[Math.floor(r()*arpPatterns.length)];
     for(let s=0;s<aS;s++){const t=snapToScale(tri[aO[s%aO.length]%tri.length]+12);aN.push({t:bar*1920+s*aL,d:Math.round(aL*.78),note:t,vel:style==='ambient'?58:82})}
 
     // ─── BASS: genre-specific patterns ───
     const rn=bB+sc[deg];
     if(isEDM){
-      [0,Math.round(ticksPerBar*.25),Math.round(ticksPerBar*.5),Math.round(ticksPerBar*.75)].forEach((x,j)=>{
-        const note=j===3?rn+12:rn;
+      const bassPatterns=[[0,.25,.5,.75],[0,.33,.66,1],[0,.5,.75,1]];
+      const bp=bassPatterns[Math.floor(r()*bassPatterns.length)];
+      bp.forEach((frac,j)=>{
+        const x=Math.round(ticksPerBar*frac);
+        const note=j===bp.length-1?rn+12:rn;
         const vel=j===0?100:j===2?96:88;
         bN.push({t:bar*ticksPerBar+x,d:style==='dubstep'?480:360,note,vel});
       });
     }else if(style==='hiphop'){
       bN.push({t:bar*ticksPerBar,d:600,note:rn,vel:88});
-      if(r()>.4)bN.push({t:bar*ticksPerBar+Math.round(ticksPerBar*.66),d:360,note:rn+7,vel:78});
+      if(r()>.4)bN.push({t:bar*ticksPerBar+Math.round(ticksPerBar*(.5+r()*.3)),d:360,note:rn+(r()>.5?7:0),vel:78});
     }else if(style==='rnb'){
-      const bassNotes=[rn,rn+4,rn+7,rn+10];
-      bassNotes.forEach((n,i)=>{
-        bN.push({t:bar*ticksPerBar+Math.round(ticksPerBar*(i/4)),d:420,note:n,vel:82-Math.floor(r()*8)});
+      const bassPatterns=[[0,4,7,10],[0,3,7,10],[0,5,7,10]];
+      const bp=bassPatterns[Math.floor(r()*bassPatterns.length)];
+      bp.forEach((iv,i)=>{
+        bN.push({t:bar*ticksPerBar+Math.round(ticksPerBar*(i/4)),d:420,note:rn+iv,vel:82-Math.floor(r()*8)});
       });
     }else if(style==='rock'){
       bN.push({t:bar*ticksPerBar,d:420,note:rn,vel:92});
@@ -467,7 +489,9 @@ function generate(){
     });
 
     // ─── HARMONY: genre-specific counter-melodies ───
-    const hRhy=isEDM?[8,8]:style==='ambient'?[16]:style==='hiphop'?[8,4,4]:[8,4,4];
+    const hRhyPools={edm:[[8,8],[4,4,4,4]],ambient:[[16],[12,4]],hiphop:[[8,4,4],[4,4,4,4]]};
+    const hRhyPool=hRhyPools[style]||[[8,4,4],[4,4,4,4],[8,8]];
+    const hRhy=hRhyPool[Math.floor(r()*hRhyPool.length)];
     let hTo=0,hP=null;
     hRhy.forEach((d16,hi)=>{
       const hd=d16*120;
@@ -503,21 +527,27 @@ function generate(){
     }else if(timeSig==='5/4'){
       hit(kN,[0,Math.round(ticksPerBar*.5)],36,112,110);hit(sN,[Math.round(ticksPerBar*.33)],38,95,100);
     }else{
-      // Genre-specific 4/4 patterns
       const ff=['house','basshouse','progressive','trance','techno'].includes(style);
       
       if(ff){
         hit(kN,[0,480,960,1440],36,112,110);
+        if(r()>.6)hit(kN,[Math.round(1680)],36,72,60);
       }else if(style==='dnb'){
         hit(kN,[0,720,1200],36,108,100);
+        if(r()>.7)hit(kN,[Math.round(480)],36,80,60);
       }else if(style==='dubstep'){
         hit(kN,[0,720,1440],36,112,120);
       }else if(style==='hiphop'){
-        hit(kN,[0,720,1320],36,104,120);
+        const kickVars=[[0,720,1320],[0,600,1200],[0,840,1320]];
+        hit(kN,kickVars[Math.floor(r()*kickVars.length)],36,104,120);
+        if(r()>.6)hit(kN,[Math.round(1560)],36,72,80);
       }else if(style==='lofi'){
-        hit(kN,[0,Math.round(720*1.05),Math.round(1320*1.05)],36,96,120);
+        const s=.05;
+        hit(kN,[0,Math.round(720*(1+s)),Math.round(1320*(1+s))],36,96,120);
       }else if(style==='rock'){
-        hit(kN,[0,960],36,108,110);
+        const rockKicks=[[0,960],[0,720,960],[0,960,1440]];
+        hit(kN,rockKicks[Math.floor(r()*rockKicks.length)],36,108,110);
+        if(r()>.5)hit(kN,[Math.round(1440)],36,80,80);
       }else if(style==='rnb'){
         hit(kN,[0,720,1200],36,100,110);
       }else if(style==='ambient'||style==='cinematic'){
