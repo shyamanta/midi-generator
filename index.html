@@ -272,7 +272,7 @@ async function saveFolder(ids,drumIds,label){
   try{$('status').textContent='Choose a folder...';const root=await window.showDirectoryPicker({mode:'readwrite'});const sel=$('style').value==='edm'?$('edmStyle').value:$('style').value;const folder=await root.getDirectoryHandle(tsFolder(sel,$('key').value,$('tempo').value),{create:true});for(const id of ids){if(!files[id]||!files[id].data)continue;const f=await folder.getFileHandle(files[id].name,{create:true});const s=await f.createWritable();await s.write(files[id].data);await s.close()}if(drumIds.length){const df=await folder.getDirectoryHandle('Drums',{create:true});for(const id of drumIds){if(!files[id]||!files[id].data)continue;const f=await df.getFileHandle(files[id].name,{create:true});const s=await f.createWritable();await s.write(files[id].data);await s.close()}}$('status').textContent=`Saved to ${root.name}\\${folder.name}`;$('status').className='status ok'}catch(e){$('status').textContent=e.name==='AbortError'?'Cancelled.':`Error: ${e.message}`}
 }
 function generate(){
-  const root=keyRoots[$('key').selectedIndex],sc=scales[$('scale').value],bars=+$('bars').value,tempo=+$('tempo').value,style=$('style').value==='edm'?$('edmStyle').value:$('style').value,r=rng(+$('seed').value||1),mB=+$('melodyOct').value+root,bB=+$('bassOct').value+root,isEDM=['house','basshouse','progressive','dubstep','trance','futurebass','techno','dnb'].includes(style);
+  const root=keyRoots[$('key').selectedIndex],sc=scales[$('scale').value],bars=+$('bars').value,tempo=+$('tempo').value,style=$('style').value==='edm'?$('edmStyle').value:$('style').value,r=rng(+$('seed').value||1),mB=+$('melodyOct').value+root,bB=+$('bassOct').value+root,isEDM=['house','basshouse','progressive','dubstep','trance','futurebass','techno','dnb'].includes(style),ticksPerBar=1920,timeSig='4/4';
   const pats={pop:[0,4,5,3],ambient:[0,5,3,4],house:[0,5,1,4],basshouse:[0,3,5,4],progressive:[0,4,5,3],dubstep:[0,3,5,4],trance:[0,5,1,4],futurebass:[0,5,3,4],techno:[0,1,3,4],dnb:[0,5,1,4],hiphop:[0,3,5,4],lofi:[0,3,5,4],cinematic:[0,5,3,4],rnb:[0,5,1,4],rock:[0,4,5,3]}[style];
   const prog=Array.from({length:bars},(_,i)=>pats[i%pats.length]);
   const cN=[],bN=[],mN=[],hN=[],aN=[],pdN=[],kN=[],sN=[],clN=[],cHN=[],oHN=[],crN=[],rN=[];
@@ -323,7 +323,19 @@ function generate(){
       tri.push(ct(7));
       if(r()<.3)tri[1]=ct(1);
     }
-    const voiced=tri.map((n,i)=>snapToScale(i%3===1?n+12:n));
+    // Apply inversions based on genre for smoother voice leading
+    let voiced;
+    if(style==='rock'){
+      voiced=[tri[0],tri[0]+7,tri[0]+12];
+    }else if(style==='rnb'||style==='lofi'){
+      voiced=tri.map((n,i)=>snapToScale(i===0?n+12:i%2===1?n+12:n));
+    }else if(style==='ambient'||style==='cinematic'){
+      voiced=tri.map((n,i)=>snapToScale(i%2===0?n+12:n+24));
+    }else if(style==='hiphop'){
+      voiced=[tri[0],tri[0]+10];
+    }else{
+      voiced=tri.map((n,i)=>snapToScale(i%3===1?n+12:n));
+    }
     const chordDur=isEDM?840:1800;
     if(style==='ambient'||style==='cinematic'){voiced.forEach((n,i)=>cN.push({t:bar*1920+i*40,d:1920-i*40,note:n,vel:50+Math.floor(r()*10)}))}
     else if(isEDM&&r()>.35){const sp=[0,480,960,1440].filter(()=>r()>.4);voiced.forEach(n=>sp.forEach((s,si)=>cN.push({t:bar*1920+s,d:180+si*20,note:n,vel:68+Math.floor(r()*14)})))}
@@ -366,11 +378,39 @@ function generate(){
     const aS=style==='dubstep'?4:style==='dnb'?16:8,aL=1920/aS,aO=style==='techno'?[0,1,2,1]:style==='progressive'?[0,1,2,3,2,1]:[0,1,2,1,2,1,0,1];
     for(let s=0;s<aS;s++){const t=snapToScale(tri[aO[s%aO.length]%tri.length]+12);aN.push({t:bar*1920+s*aL,d:Math.round(aL*.78),note:t,vel:style==='ambient'?58:82})}
 
-    // ─── BASS ───
+    // ─── BASS: genre-specific patterns ───
     const rn=bB+sc[deg];
-    if(isEDM)[0,480,960,1440].forEach((x,j)=>bN.push({t:bar*1920+x,d:style==='dubstep'?480:360,note:rn+(j===3?12:0),vel:96}));
-    else if(style==='hiphop')[0,720,1200].forEach((x,j)=>bN.push({t:bar*1920+x,d:j===0?600:360,note:rn+(j===2?7:0),vel:85}));
-    else{bN.push({t:bar*1920,d:['ambient','cinematic'].includes(style)?1680:900,note:rn,vel:84});if(r()>.6)bN.push({t:bar*1920+960,d:720,note:rn+(['pop','rock'].includes(style)&&r()>.5?7:0),vel:75})}
+    if(isEDM){
+      [0,Math.round(ticksPerBar*.25),Math.round(ticksPerBar*.5),Math.round(ticksPerBar*.75)].forEach((x,j)=>{
+        const note=j===3?rn+12:rn;
+        const vel=j===0?100:j===2?96:88;
+        bN.push({t:bar*ticksPerBar+x,d:style==='dubstep'?480:360,note,vel});
+      });
+    }else if(style==='hiphop'){
+      bN.push({t:bar*ticksPerBar,d:600,note:rn,vel:88});
+      if(r()>.4)bN.push({t:bar*ticksPerBar+Math.round(ticksPerBar*.66),d:360,note:rn+7,vel:78});
+    }else if(style==='rnb'){
+      const bassNotes=[rn,rn+4,rn+7,rn+10];
+      bassNotes.forEach((n,i)=>{
+        bN.push({t:bar*ticksPerBar+Math.round(ticksPerBar*(i/4)),d:420,note:n,vel:82-Math.floor(r()*8)});
+      });
+    }else if(style==='rock'){
+      bN.push({t:bar*ticksPerBar,d:420,note:rn,vel:92});
+      bN.push({t:bar*ticksPerBar+480,d:420,note:rn+7,vel:84});
+      bN.push({t:bar*ticksPerBar+960,d:420,note:rn+12,vel:88});
+    }else if(style==='lofi'){
+      const walkIntervals=[0,4,7,10,7,4];
+      walkIntervals.forEach((iv,i)=>{
+        if(bar*ticksPerBar+Math.round(ticksPerBar*(i/6))<bar*ticksPerBar+ticksPerBar){
+          bN.push({t:bar*ticksPerBar+Math.round(ticksPerBar*(i/6)),d:280,note:rn+iv,vel:72+Math.floor(r()*10)});
+        }
+      });
+    }else if(['ambient','cinematic'].includes(style)){
+      bN.push({t:bar*ticksPerBar,d:ticksPerBar-60,note:rn,vel:52});
+    }else{
+      bN.push({t:bar*ticksPerBar,d:900,note:rn,vel:84});
+      if(r()>.6)bN.push({t:bar*ticksPerBar+Math.round(ticksPerBar*.5),d:720,note:rn+(r()>.5?7:0),vel:75});
+    }
 
     // ─── MELODY: genre-specific, profile-based ───
     const isAmbient=['ambient','cinematic'].includes(style);
@@ -426,54 +466,133 @@ function generate(){
       pN=note;to+=dT
     });
 
-    // ─── HARMONY: simple counter-melody, long notes ───
+    // ─── HARMONY: genre-specific counter-melodies ───
     const hRhy=isEDM?[8,8]:style==='ambient'?[16]:style==='hiphop'?[8,4,4]:[8,4,4];
     let hTo=0,hP=null;
     hRhy.forEach((d16,hi)=>{
       const hd=d16*120;
-      if(hTo+hd>1920)return;
-      // Rest more often than melody
+      if(hTo+hd>ticksPerBar)return;
       if(r()<.25){hTo+=hd;return}
       let note;
-      // Choose from chord tones or scale neighbors
       const choices=[deg,deg+2,deg+4];
       const dOff=choices[Math.floor(r()*choices.length)];
-      note=lNote(dOff);
-      // Contrary motion: if melody went up, go down, and vice versa
+      note=lNote(dOff,mB);
+      // Contrary motion
       if(mN.length>0){
         const lastM=mN[mN.length-1].note;
-        if(pN!==null&&lastM>pN)note=snapToScale(note-2); // melody went up, we go down
-        else if(pN!==null&&lastM<pN)note=snapToScale(note+2); // melody went down, we go up
+        if(hP!==null&&lastM>hP)note=snapToScale(note-2);
+        else if(hP!==null&&lastM<hP)note=snapToScale(note+2);
       }
-      // Leap limit: don't jump more than a 5th
-      if(pN!==null){const dist=Math.abs(note-pN);if(dist>7)note=snapToScale(pN+Math.sign(note-pN)*Math.min(dist,5))}
+      // Leap limit
+      if(hP!==null){const dist=Math.abs(note-hP);if(dist>7)note=snapToScale(hP+Math.sign(note-hP)*Math.min(dist,5))}
       note=Math.max(48,Math.min(72,note));
       note=snapToScale(note);
-      // Longer notes, softer
-      const dur=hd*.9;
-      hN.push({t:Math.round(bar*1920+hTo),d:dur,note,vel:52+Math.floor(r()*12)});
-      pN=note;hTo+=hd
+      const hVel=style==='rnb'?56+Math.floor(r()*10):style==='ambient'?42:52+Math.floor(r()*12);
+      hN.push({t:bar*ticksPerBar+Math.round(hTo),d:hd*.9,note,vel:hVel});
+      hP=note;hTo+=hd
     });
 
-    // ─── DRUMS ───
-    const hit=(p,st,n,v=100,d=90)=>st.forEach(s=>p.push({t:bar*1920+s,d,note:n,vel:v}));
-    const ff=['house','basshouse','progressive','trance','techno'].includes(style);
-    if(ff)hit(kN,[0,480,960,1440],36,112,110);else if(style==='dnb')hit(kN,[0,720,1200],36,108,100);else if(style==='dubstep')hit(kN,[0,720,1440],36,112,120);else if(['hiphop','lofi'].includes(style))hit(kN,[0,720,1320],36,104,120);else hit(kN,[0,960],36,106,110);
-    hit(sN,style==='dnb'?[720,1440]:[960],38,95,100);
-    hit(clN,style==='hiphop'?[960]:[960,1440],39,82,90);
-    const hs=style==='dnb'?120:isEDM?240:240;for(let h=0;h<1920;h+=hs)if(r()>.12)cHN.push({t:bar*1920+h,d:55,note:42,vel:58+Math.floor(r()*26)});
-    if(isEDM||style==='pop')hit(oHN,[720,1680],46,72,140);
-    if($('includeCrash').checked&&(isEDM||style==='rock'||style==='pop')&&(bar%4===0||bar===bars-1))hit(crN,[0],49,104,260);
-    if($('includeRide').checked&&['trance','techno','dnb','progressive','rock'].includes(style)){const rs=style==='dnb'?240:480;for(let ra=0;ra<1920;ra+=rs)rN.push({t:bar*1920+ra,d:120,note:51,vel:68})}
+    // ─── DRUMS: genre-specific patterns based on real songs ───
+    const hit=(p,st,n,v=100,d=90)=>st.forEach(s=>p.push({t:bar*ticksPerBar+s,d,note:n,vel:v}));
 
-    // ─── PADS: sustained chord tones ───
+    // Time signature handling
+    if(timeSig==='3/4'){
+      hit(kN,[0],36,112,110);hit(sN,[Math.round(ticksPerBar*2/3)],38,95,100);
+    }else if(timeSig==='6/8'){
+      hit(kN,[0,Math.round(ticksPerBar/2)],36,112,110);hit(sN,[Math.round(ticksPerBar/2)],38,95,100);
+    }else if(timeSig==='5/4'){
+      hit(kN,[0,Math.round(ticksPerBar*.5)],36,112,110);hit(sN,[Math.round(ticksPerBar*.33)],38,95,100);
+    }else{
+      // Genre-specific 4/4 patterns
+      const ff=['house','basshouse','progressive','trance','techno'].includes(style);
+      
+      if(ff){
+        hit(kN,[0,480,960,1440],36,112,110);
+      }else if(style==='dnb'){
+        hit(kN,[0,720,1200],36,108,100);
+      }else if(style==='dubstep'){
+        hit(kN,[0,720,1440],36,112,120);
+      }else if(style==='hiphop'){
+        hit(kN,[0,720,1320],36,104,120);
+      }else if(style==='lofi'){
+        hit(kN,[0,Math.round(720*1.05),Math.round(1320*1.05)],36,96,120);
+      }else if(style==='rock'){
+        hit(kN,[0,960],36,108,110);
+      }else if(style==='rnb'){
+        hit(kN,[0,720,1200],36,100,110);
+      }else if(style==='ambient'||style==='cinematic'){
+        if(r()>.7)hit(kN,[0],36,60,110);
+      }else{
+        hit(kN,[0,960],36,106,110);
+      }
+
+      // Snare
+      if(style==='dnb'){
+        hit(sN,[720,1440],38,95,100);
+      }else if(style==='hiphop'){
+        hit(sN,[960],38,92,100);
+      }else if(style==='lofi'){
+        hit(sN,[Math.round(960*1.05)],38,85,100);
+      }else if(style==='rock'){
+        hit(sN,[960],38,98,100);
+      }else if(style==='rnb'){
+        hit(sN,[960],38,90,100);
+        if(r()>.5)hit(sN,[480,1440],38,55,60);
+      }else if(!['ambient','cinematic'].includes(style)){
+        hit(sN,[960],38,95,100);
+      }
+
+      // Clap
+      if(style==='hiphop'){
+        hit(clN,[960],39,82,90);
+      }else if(style==='rnb'){
+        hit(clN,[960],39,75,90);
+      }else if(!['ambient','cinematic','rock'].includes(style)){
+        hit(clN,[960],39,78,90);
+      }
+
+      // Hi-hats
+      const hs=style==='dnb'?120:isEDM?240:style==='hiphop'?180:style==='lofi'?Math.round(240*1.05):240;
+      for(let h=0;h<ticksPerBar;h+=hs){
+        if(r()>.12){
+          const hVel=style==='hiphop'?58+Math.floor(r()*20):style==='rnb'?52+Math.floor(r()*18):58+Math.floor(r()*26);
+          cHN.push({t:bar*ticksPerBar+h,d:55,note:42,vel:hVel});
+        }
+      }
+
+      // Open hat
+      if(isEDM||style==='pop'){
+        hit(oHN,[Math.round(ticksPerBar*.375),Math.round(ticksPerBar*.875)],46,72,140);
+      }else if(style==='rock'){
+        hit(oHN,[Math.round(ticksPerBar*.75)],46,68,140);
+      }
+
+      // Crash
+      if($('includeCrash').checked&&(isEDM||style==='rock'||style==='pop')&&(bar%4===0||bar===bars-1)){
+        hit(crN,[0],49,104,260);
+      }
+
+      // Ride
+      if($('includeRide').checked&&['trance','techno','dnb','progressive','rock'].includes(style)){
+        const rs=style==='dnb'?240:480;
+        for(let ra=0;ra<ticksPerBar;ra+=rs)rN.push({t:bar*ticksPerBar+ra,d:120,note:51,vel:68});
+      }
+    }
+
+    // ─── PADS: genre-specific sustained chords ───
     const padVoiced=[ct(0),ct(2),ct(4)];
     if(chordExt==='maj9'||chordExt==='dom7')padVoiced.push(ct(6));
     if(chordExt==='maj9')padVoiced.push(ct(8));
-    const padNotes=padVoiced.map((n,i)=>snapToScale(i%2===0?n+12:n+24));
-    const padVel=style==='ambient'?48:style==='cinematic'?50:45;
-    const padDur=1920;
-    padNotes.forEach((n,i)=>{pdN.push({t:bar*1920,d:padDur-i*30,note:n,vel:padVel+Math.floor(r()*6)})});
+    let padNotes;
+    if(style==='ambient'||style==='cinematic'){
+      padNotes=padVoiced.map((n,i)=>snapToScale(i%2===0?n+12:n+24));
+    }else if(style==='rnb'||style==='lofi'){
+      padNotes=padVoiced.map((n,i)=>snapToScale(i===0?n+12:i%2===1?n+12:n+24));
+    }else{
+      padNotes=padVoiced.map((n,i)=>snapToScale(i%2===0?n+12:n+24));
+    }
+    const padVel=style==='ambient'?48:style==='cinematic'?50:style==='rnb'?46:45;
+    padNotes.forEach((n,i)=>{pdN.push({t:bar*ticksPerBar,d:ticksPerBar-i*30,note:n,vel:padVel+Math.floor(r()*6)})});
   });
   mN.forEach(n=>n.note=snapToScale(n.note));
   hN.forEach(n=>n.note=snapToScale(n.note));
