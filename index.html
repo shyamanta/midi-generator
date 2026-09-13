@@ -439,7 +439,7 @@ function generate(){
     let to=0,pN=null;
     const swing=(bar%2===0?1:0.97);
     const profile=melodicProfiles[style]||melodicProfiles.pop;
-    // Generate ONE motif for the entire piece (bar 0 only)
+    // Generate motif rhythms for each bar (varied, not identical)
     if(bar===0){
       const mLen=3+Math.floor(r()*2);
       motif=[];
@@ -450,9 +450,16 @@ function generate(){
         else{motif.push(motif[i-1])}
         motif[i]=Math.max(0,Math.min(7,motif[i]));
       }
-      motifRhy=profile.rhythm[Math.floor(r()*profile.rhythm.length)].slice(0,mLen);
+      motifRhy=[];
+      for(let b=0;b<bars;b++){
+        const barLen=3+Math.floor(r()*2);
+        const pat=profile.rhythm[Math.floor(r()*profile.rhythm.length)];
+        const shifted=pat.slice(0).concat(pat.slice(0,barLen));
+        const start=Math.floor(r()*(pat.length||1));
+        motifRhy.push(shifted.slice(start,start+barLen));
+      }
     }
-    const mRhy=motifRhy;
+    const mRhy=motifRhy[bar]||motifRhy[0];
     const phrasePos=bar%4;
     const octaveShift=Math.floor(bar/4)%3;
     mRhy.forEach((d16,ni)=>{
