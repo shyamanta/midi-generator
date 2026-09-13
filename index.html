@@ -301,7 +301,7 @@ function generate(){
   // Chord extension: pick ONCE per genre, consistent across all bars
   const chordExt={
     pop:'add9',hiphop:'m7',rnb:'maj9',lofi:'maj7',ambient:'sus4',cinematic:'maj7#11',
-    rock:'power',house:'dom7',basshouse:'m7',progressive:'maj9',dubstep:'dom7',
+    rock:'power',house:'dom7',basshouse:'m7',progressive:'add9plus',dubstep:'dom7',
     trance:'maj9',futurebass:'7sus4',techno:'dom7',dnb:'dom7'
   }[style]||'maj';
 
@@ -319,11 +319,48 @@ function generate(){
     else if(chordExt==='power'){tri.push(ct(7))}
     else if(chordExt==='dom7'){tri.push(ct(6))}
     else if(chordExt==='7sus4'){tri[1]=ct(3);tri.push(ct(6))}
+    else if(chordExt==='add9plus'){
+      tri.push(ct(7));
+      if(r()<.3)tri[1]=ct(1);
+    }
     const voiced=tri.map((n,i)=>snapToScale(i%3===1?n+12:n));
     const chordDur=isEDM?840:1800;
     if(style==='ambient'||style==='cinematic'){voiced.forEach((n,i)=>cN.push({t:bar*1920+i*40,d:1920-i*40,note:n,vel:50+Math.floor(r()*10)}))}
     else if(isEDM&&r()>.35){const sp=[0,480,960,1440].filter(()=>r()>.4);voiced.forEach(n=>sp.forEach((s,si)=>cN.push({t:bar*1920+s,d:180+si*20,note:n,vel:68+Math.floor(r()*14)})))}
     else{voiced.forEach((n,i)=>cN.push({t:bar*1920+i*15,d:chordDur,note:n,vel:62+Math.floor(r()*10)}))}
+
+    // Progressive house: smooth voice leading
+    if(style==='progressive'){
+      if(bar>0){
+        const prevTri=cN.filter(n=>n.t>=(bar-1)*1920&&n.t<bar*1920);
+        if(prevTri.length>0){
+          voiced.forEach((n,i)=>{
+            const closest=prevTri.reduce((a,p)=>Math.abs(p.note-n)<Math.abs(p.note-a)?p.note:a,prevTri[0].note);
+            if(Math.abs(closest-n)>7)voiced[i]=n-12;
+          });
+        }
+      }
+    }
+    // Progressive house: rhythmic supersaw stabs
+    if(style==='progressive'){
+      const stabPattern=[0,360,720,1080,1440,1800];
+      voiced.forEach(n=>{
+        stabPattern.forEach((s,i)=>{
+          const vel=i%2===0?72+Math.floor(r()*10):58+Math.floor(r()*8);
+          const dur=140+Math.floor(r()*40);
+          cN.push({t:bar*1920+s,d:dur,note:n,vel});
+        });
+      });
+    }
+    // Progressive house: sidechain pumping
+    if(style==='progressive'){
+      cN.forEach(n=>{
+        const beatPos=n.t%1920;
+        if(beatPos<120) n.vel=Math.round(n.vel*0.6);
+        else if(beatPos<240) n.vel=Math.round(n.vel*0.85);
+        else if(beatPos<360) n.vel=Math.round(n.vel*0.95);
+      });
+    }
 
     // ─── ARPEGGIATOR ───
     const aS=style==='dubstep'?4:style==='dnb'?16:8,aL=1920/aS,aO=style==='techno'?[0,1,2,1]:style==='progressive'?[0,1,2,3,2,1]:[0,1,2,1,2,1,0,1];
