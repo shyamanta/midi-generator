@@ -185,6 +185,7 @@
           <button class="dl-btn" id="chords" disabled><span class="ico">🎸</span> Chords</button>
           <button class="dl-btn" id="bass" disabled><span class="ico">🔊</span> Bass</button>
           <button class="dl-btn" id="arp" disabled><span class="ico">✨</span> Arp</button>
+          <button class="dl-btn" id="pads" disabled><span class="ico">🌊</span> Pads</button>
           <button class="dl-btn" id="kick" disabled><span class="ico">🥁</span> Kick</button>
           <button class="dl-btn" id="snare" disabled><span class="ico">🪘</span> Snare</button>
           <button class="dl-btn" id="clap" disabled><span class="ico">👏</span> Clap</button>
@@ -211,6 +212,7 @@
           <div class="part"><div class="part-icon">🎸</div><h3>Chords</h3><p>Unusual voicings: maj9, 7#11, quartal, chromatic mediant</p></div>
           <div class="part"><div class="part-icon">🔊</div><h3>Bass</h3><p>Root-driven line with genre patterns</p></div>
           <div class="part"><div class="part-icon">✨</div><h3>Arpeggiator</h3><p>Chord tones in rhythmic sequence</p></div>
+          <div class="part"><div class="part-icon">🌊</div><h3>Pads</h3><p>Sustained atmospheric chords</p></div>
           <div class="part"><div class="part-icon">🥁</div><h3>Drums</h3><p>Kick, snare, clap, hats, crash, ride</p></div>
         </div>
       </div>
@@ -273,33 +275,32 @@ function generate(){
   const root=keyRoots[$('key').selectedIndex],sc=scales[$('scale').value],bars=+$('bars').value,tempo=+$('tempo').value,style=$('style').value==='edm'?$('edmStyle').value:$('style').value,r=rng(+$('seed').value||1),mB=+$('melodyOct').value+root,bB=+$('bassOct').value+root,isEDM=['house','basshouse','progressive','dubstep','trance','futurebass','techno','dnb'].includes(style);
   const pats={pop:[0,4,5,3],ambient:[0,5,3,4],house:[0,5,1,4],basshouse:[0,3,5,4],progressive:[0,4,5,3],dubstep:[0,3,5,4],trance:[0,5,1,4],futurebass:[0,5,3,4],techno:[0,1,3,4],dnb:[0,5,1,4],hiphop:[0,3,5,4],lofi:[0,3,5,4],cinematic:[0,5,3,4],rnb:[0,5,1,4],rock:[0,4,5,3]}[style];
   const prog=Array.from({length:bars},(_,i)=>pats[i%pats.length]);
-  const cN=[],bN=[],mN=[],hN=[],aN=[],kN=[],sN=[],clN=[],cHN=[],oHN=[],crN=[],rN=[];
+  const cN=[],bN=[],mN=[],hN=[],aN=[],pdN=[],kN=[],sN=[],clN=[],cHN=[],oHN=[],crN=[],rN=[];
+  let motif=[],motifRhy=[];
   const lNote=d=>mB+sc[((d%7)+7)%7]+12*Math.floor(d/7);
   const snapToScale=n=>{const oct=n-((n%12)+12)%12;const pc=((n%12)+12)%12;let best=sc[0],bestD=12;for(const s of sc){const d=Math.abs(pc-s);if(d<bestD){bestD=d;best=s}}return oct+best};
 
+  // Chord extension: pick ONCE per genre, consistent across all bars
+  const chordExt={
+    pop:'add9',hiphop:'m7',rnb:'maj9',lofi:'maj7',ambient:'sus4',cinematic:'maj7#11',
+    rock:'power',house:'dom7',basshouse:'m7',progressive:'maj9',dubstep:'dom7',
+    trance:'maj9',futurebass:'7sus4',techno:'dom7',dnb:'dom7'
+  }[style]||'maj';
+
   prog.forEach((deg,bar)=>{
-    // ─── CHORDS: unusual voicings ───
+    // ─── CHORDS: consistent voicings ───
     const ct=o=>mB-12+sc[(deg+o)%7]+12*Math.floor((deg+o)/7);
     const tri=[ct(0),ct(2),ct(4)];
-    const roll=r();
-    if(style==='rnb'){if(roll>.3){tri.push(ct(6));tri.push(ct(8))}else if(roll>.15){tri[1]=ct(3);tri.push(ct(6))}else{tri.push(ct(6));tri.push(ct(10))}}
-    else if(style==='lofi'){if(roll>.4){tri.push(ct(6))}else if(roll>.2){tri.push(ct(6));tri.push(ct(8))}else{tri[1]=ct(3);tri.push(ct(6))}}
-    else if(style==='ambient'){if(roll>.5){tri[1]=ct(3);tri.push(ct(6))}else if(roll>.3){tri.push(ct(6));tri.push(ct(9))}else{tri.push(ct(8));tri.push(ct(10))}}
-    else if(style==='cinematic'){if(roll>.4){tri.push(ct(6));tri.push(ct(9))}else if(roll>.2){tri.push(ct(10));tri.push(ct(13))}else{tri.push(ct(6));tri.push(ct(8));tri.push(ct(10))}}
-    else if(style==='pop'){if(roll>.6){tri.push(ct(7))}else if(roll>.35){tri.push(ct(6))}else{tri[1]=ct(3)}}
-    else if(style==='rock'){if(roll>.7){tri[0]+=12}else if(roll>.4){tri.push(ct(7))}else{tri.push(ct(10))}}
-    else if(style==='hiphop'){if(roll>.5){tri.push(ct(6));tri.push(ct(8))}else if(roll>.25){tri.push(ct(6));tri.push(ct(10))}else{tri[1]=ct(1);tri.push(ct(6))}}
-    else if(style==='house'){if(roll>.5){tri.push(ct(6))}else if(roll>.25){tri.push(ct(6));tri.push(ct(8))}else{tri.push(ct(10))}}
-    else if(style==='basshouse'){if(roll>.6){tri.push(ct(6))}else{tri[1]=ct(1);tri.push(ct(6))}}
-    else if(style==='progressive'){if(roll>.5){tri.push(ct(6));tri.push(ct(8))}else if(roll>.25){tri.push(ct(6));tri.push(ct(9))}else{tri[1]=ct(3);tri.push(ct(6))}}
-    else if(style==='dubstep'){if(roll>.6){tri.push(ct(6));tri.push(ct(10))}else{tri.push(ct(6))}}
-    else if(style==='trance'){if(roll>.5){tri.push(ct(6));tri.push(ct(8))}else{tri.push(ct(6));tri.push(ct(9))}}
-    else if(style==='futurebass'){if(roll>.5){tri.push(ct(6));tri.push(ct(8))}else{tri[1]=ct(3);tri.push(ct(6))}}
-    else if(style==='techno'){if(roll>.6){tri.push(ct(6))}else{tri.push(ct(6));tri.push(ct(10))}}
-    else if(style==='dnb'){if(roll>.5){tri.push(ct(6));tri.push(ct(8))}else{tri.push(ct(6))}}
-    if(r()<.2){const base=ct(0);const med=r()<.5?4:3;const candidates=[base+med,base+med+12,base-med,base-med+12];tri.push(snapToScale(candidates[Math.floor(r()*candidates.length)]))}
-    if(r()<.15){tri.push(snapToScale(ct(0)+1))}
-    if(r()<.25&&tri.length<5){tri.push(snapToScale(ct(0)+7));if(r()<.5)tri.push(snapToScale(ct(0)+10))}
+    // Apply the ONE extension type consistently
+    if(chordExt==='add9')tri.push(ct(7));
+    else if(chordExt==='m7'){tri[1]=ct(1);tri.push(ct(6))}
+    else if(chordExt==='maj9'){tri.push(ct(6));tri.push(ct(8))}
+    else if(chordExt==='maj7'){tri.push(ct(6))}
+    else if(chordExt==='sus4'){tri[1]=ct(3);tri.push(ct(6))}
+    else if(chordExt==='maj7#11'){tri.push(ct(6));tri.push(ct(9))}
+    else if(chordExt==='power'){tri.push(ct(7))}
+    else if(chordExt==='dom7'){tri.push(ct(6))}
+    else if(chordExt==='7sus4'){tri[1]=ct(3);tri.push(ct(6))}
     const voiced=tri.map((n,i)=>snapToScale(i%3===1?n+12:n));
     const chordDur=isEDM?840:1800;
     if(style==='ambient'||style==='cinematic'){voiced.forEach((n,i)=>cN.push({t:bar*1920+i*40,d:1920-i*40,note:n,vel:50+Math.floor(r()*10)}))}
@@ -316,86 +317,53 @@ function generate(){
     else if(style==='hiphop')[0,720,1200].forEach((x,j)=>bN.push({t:bar*1920+x,d:j===0?600:360,note:rn+(j===2?7:0),vel:85}));
     else{bN.push({t:bar*1920,d:['ambient','cinematic'].includes(style)?1680:900,note:rn,vel:84});if(r()>.6)bN.push({t:bar*1920+960,d:720,note:rn+(['pop','rock'].includes(style)&&r()>.5?7:0),vel:75})}
 
-    // ─── MELODY: simple, human, musical ───
+    // ─── MELODY: motif-based, progressive development ───
     const isAmbient=['ambient','cinematic'].includes(style);
     const phraseBar=bar%4;
-    let to=0,pN=null,motif=[];
-    // Humanize: slight timing offset per bar
+    let to=0,pN=null;
     const swing=(bar%2===0?1:0.97);
-    // Scale degrees that work well as melody notes (mostly steps)
-    const safeDeg=[0,1,2,3,4,5,6];
-    // Generate a short motif in bar 0, then develop it
-    const genMotif=()=>{
-      const m=[];
-      const len=3+Math.floor(r()*3); // 3-5 notes
-      for(let i=0;i<len;i++){
-        const d=i===0?0:safeDeg[Math.floor(r()*5)]; // prefer lower degrees
-        m.push(d);
+    // Generate ONE motif for the entire piece (bar 0 only)
+    if(bar===0){
+      const mLen=3+Math.floor(r()*2); // 3-4 notes, simple
+      const mRoots=[0,0,2,4,0,2,4,5]; // prefer root, 3rd, 5th
+      motif=[];
+      for(let i=0;i<mLen;i++){
+        motif.push(i===0?0:mRoots[Math.floor(r()*mRoots.length)]);
       }
-      return m;
-    };
-    if(phraseBar===0)motif=genMotif();
-    // Rhythm: simple patterns per genre
-    const rhythms={
-      pop:[[4,2,2,4,2,2],[2,2,4,2,2,4],[4,4,2,2,4],[6,2,4,2,2]],
-      hiphop:[[4,2,2,4,2,2],[6,2,4,2,2],[4,4,4,4],[2,4,2,2,4,2]],
-      rnb:[[4,2,2,2,2,4],[6,2,4,2,2],[4,2,2,4,2,2],[2,2,4,2,2,4]],
-      rock:[[4,2,2,4,2,2],[4,4,4,4],[6,2,4,2,2],[4,2,2,2,2,4]],
-      ambient:[[12,4],[8,8],[16],[8,4,4]],
-      cinematic:[[8,4,4],[12,4],[8,8],[4,4,8]],
-      lofi:[[6,2,4,2,2],[8,4,4],[4,4,4,4],[6,2,8]],
-      house:[[4,2,2,4,2,2],[4,2,2,2,2,4],[2,2,4,2,2,4],[4,4,2,2,4]],
-      basshouse:[[4,2,2,4,2,2],[2,2,4,2,2,4],[6,2,4,2,2],[4,2,2,2,2,4]],
-      progressive:[[6,2,4,2,2],[4,2,2,4,2,2],[8,4,4],[4,4,2,2,4]],
-      dubstep:[[8,4,4],[12,4],[8,8],[4,8,4]],
-      trance:[[4,2,2,4,2,2],[4,2,2,2,2,4],[4,2,2,4,2,2],[2,2,4,2,2,4]],
-      futurebass:[[6,2,4,2,2],[4,4,4,4],[8,4,4],[4,2,2,4,2,2]],
-      techno:[[4,2,2,4,2,2],[4,2,2,2,2,4],[4,2,2,4,2,2],[4,2,2,2,2,4]],
-      dnb:[[2,2,2,2,4,2,2],[4,2,2,4,2,2],[2,2,4,2,2,4],[4,2,2,2,2,4]]
-    };
-    const mRhy=(rhythms[style]||rhythms.pop)[bar%4];
-    // Phrase position affects note choice
+      // Store motif rhythm (same for every bar)
+      motifRhy=[4,2,2,4,2,2].slice(0,mLen);
+    }
+    // Same rhythm every bar for consistency
+    const mRhy=motifRhy;
+    // Phrase position affects development
     const phrasePos=bar%4;
+    // Every 4 bars: higher octave variation
+    const octaveShift=Math.floor(bar/4)%3; // 0,0,1,0,0,1...
     mRhy.forEach((d16,ni)=>{
       const dT=Math.round(d16*120*swing);
-      // Breathing: rest occasionally, more at phrase end
-      if(ni>0&&((phrasePos===3&&ni>=mRhy.length-1&&r()<.4)||(r()<(isAmbient?.06:.1)))){to+=dT;return}
-      const sb=(to%480)<120; // strong beat (within first 120 ticks of beat)
-      let note;
-      // Use motif with development
-      if(motif.length>0&&ni<motif.length){
-        let dOff=motif[ni];
-        // Develop: sequence (shift up/down), vary slightly
-        if(phrasePos===1&&r()<.5)dOff+=1; // sequence up
-        else if(phrasePos===2&&r()<.4)dOff+=Math.floor(r()*2); // variation
-        else if(phrasePos===3)dOff=Math.max(0,dOff-phrasePos); // descend to resolve
-        note=lNote(deg+dOff);
-      }else{
-        // Fallback: stepwise from previous note
-        if(pN!==null&&r()<.7){
-          const step=[-1,0,1,0,1][Math.floor(r()*5)]; // mostly steps
-          note=snapToScale(pN+step);
-        }else{
-          note=lNote(deg+safeDeg[Math.floor(r()*5)]);
-        }
-      }
-      // Strong beats: chord tones
-      if(sb&&r()<.7){note=tri[Math.floor(r()*tri.length)];if(r()<.3)note+=12}
-      // Leap resolution: if we jumped, resolve stepwise next time
-      if(pN!==null){const dist=note-pN;if(Math.abs(dist)>4){note=snapToScale(pN+Math.sign(dist)*2)}}
-      // Phrase ending: descend to root or 5th
-      if(phrasePos===3&&ni>=mRhy.length-2){note=lNote(r()<.5?0:4)}
+      // Breathing: rest at phrase end
+      if(ni>0&&phrasePos===3&&ni>=mRhy.length-1&&r()<.3){to+=dT;return}
+      const sb=(to%480)<120;
+      let dOff=motif[ni%motif.length];
+      // Progressive development: sequence, variation, octave
+      if(phrasePos===1&&r()<.6)dOff+=1; // sequence up
+      else if(phrasePos===2&&r()<.5)dOff+=Math.floor(r()*2); // variation
+      else if(phrasePos===3)dOff=Math.max(0,dOff-1); // resolve down
+      let note=lNote(deg+dOff);
+      // Octave shift every 8 bars for build
+      if(octaveShift===1&&bar>=4)note+=12;
+      // Strong beats: always chord tones
+      if(sb)note=tri[ni%tri.length];
+      // Leap limit: max 5th
+      if(pN!==null){const dist=note-pN;if(Math.abs(dist)>7)note=snapToScale(pN+Math.sign(note-pN)*5)}
       note=snapToScale(Math.max(48,Math.min(84,note)));
-      // Velocity: natural dynamic shape
+      // Velocity: build over time
       let vel;
-      if(phrasePos===0&&ni===0)vel=88+Math.floor(r()*8); // strong start
-      else if(phrasePos===2&&sb)vel=84+Math.floor(r()*12); // peak
-      else if(phrasePos===3&&ni>=mRhy.length-2)vel=68+Math.floor(r()*10); // decrescendo
-      else if(sb)vel=76+Math.floor(r()*14);
-      else vel=60+Math.floor(r()*18);
-      // Chord tone emphasis
+      const intensity=Math.min(1,bar/bars); // 0→1 over piece
+      if(ni===0)vel=80+Math.floor(intensity*20); // gets stronger
+      else if(sb)vel=72+Math.floor(intensity*18);
+      else vel=58+Math.floor(intensity*16);
       if(tri.some(t=>Math.abs(t-note)%12===0))vel=Math.min(108,vel+4);
-      // Articulation: shorter for fast notes
       const aD=d16<=2?dT*.55:d16>=6?dT*.9:dT*.75;
       mN.push({t:Math.round(bar*1920+to),d:aD,note,vel});
       pN=note;to+=dT
@@ -440,23 +408,33 @@ function generate(){
     if(isEDM||style==='pop')hit(oHN,[720,1680],46,72,140);
     if($('includeCrash').checked&&(isEDM||style==='rock'||style==='pop')&&(bar%4===0||bar===bars-1))hit(crN,[0],49,104,260);
     if($('includeRide').checked&&['trance','techno','dnb','progressive','rock'].includes(style)){const rs=style==='dnb'?240:480;for(let ra=0;ra<1920;ra+=rs)rN.push({t:bar*1920+ra,d:120,note:51,vel:68})}
+
+    // ─── PADS: sustained chord tones ───
+    const padVoiced=[ct(0),ct(2),ct(4)];
+    if(chordExt==='maj9'||chordExt==='dom7')padVoiced.push(ct(6));
+    if(chordExt==='maj9')padVoiced.push(ct(8));
+    const padNotes=padVoiced.map((n,i)=>snapToScale(i%2===0?n+12:n+24));
+    const padVel=style==='ambient'?48:style==='cinematic'?50:45;
+    const padDur=1920;
+    padNotes.forEach((n,i)=>{pdN.push({t:bar*1920,d:padDur-i*30,note:n,vel:padVel+Math.floor(r()*6)})});
   });
   mN.forEach(n=>n.note=snapToScale(n.note));
   hN.forEach(n=>n.note=snapToScale(n.note));
   cN.forEach(n=>n.note=snapToScale(n.note));
   bN.forEach(n=>n.note=snapToScale(n.note));
   aN.forEach(n=>n.note=snapToScale(n.note));
+  pdN.forEach(n=>n.note=snapToScale(n.note));
 
   const sk=$('key').value.replace('♯','sharp').replace('/','-').replace('♭','flat'),tag=`${sk}_${$('scale').value}_${tempo}bpm`;
-  files={melody:{name:`melody_${tag}.mid`,data:midi(n2e(mN),tempo,0)},harmony:{name:`harmony-melody_${tag}.mid`,data:midi(n2e(hN),tempo,48)},chords:{name:`chords_${tag}.mid`,data:midi(n2e(cN),tempo,4)},bass:{name:`bass_${tag}.mid`,data:midi(n2e(bN),tempo,33)},arp:{name:`arpeggiator_${tag}.mid`,data:midi(n2e(aN),tempo,81)},kick:{name:`kick_${tag}.mid`,data:midi(n2e(kN),tempo,0,9)},snare:{name:`snare_${tag}.mid`,data:midi(n2e(sN),tempo,0,9)},clap:{name:`clap_${tag}.mid`,data:midi(n2e(clN),tempo,0,9)},closedHat:{name:`closed-hihat_${tag}.mid`,data:midi(n2e(cHN),tempo,0,9)},openHat:{name:`open-hihat_${tag}.mid`,data:midi(n2e(oHN),tempo,0,9)},crash:{name:`crash-cymbal_${tag}.mid`,data:midi(n2e(crN),tempo,0,9)},ride:{name:`ride-cymbal_${tag}.mid`,data:midi(n2e(rN),tempo,0,9)}};
-  ['melody','harmony','chords','bass','arp','all','kick','snare','clap','closedHat','openHat','crash','ride'].forEach(id=>$(id).disabled=false);
+  files={melody:{name:`melody_${tag}.mid`,data:midi(n2e(mN),tempo,0)},harmony:{name:`harmony-melody_${tag}.mid`,data:midi(n2e(hN),tempo,48)},chords:{name:`chords_${tag}.mid`,data:midi(n2e(cN),tempo,4)},bass:{name:`bass_${tag}.mid`,data:midi(n2e(bN),tempo,33)},arp:{name:`arpeggiator_${tag}.mid`,data:midi(n2e(aN),tempo,81)},pads:{name:`pads_${tag}.mid`,data:midi(n2e(pdN),tempo,89)},kick:{name:`kick_${tag}.mid`,data:midi(n2e(kN),tempo,0,9)},snare:{name:`snare_${tag}.mid`,data:midi(n2e(sN),tempo,0,9)},clap:{name:`clap_${tag}.mid`,data:midi(n2e(clN),tempo,0,9)},closedHat:{name:`closed-hihat_${tag}.mid`,data:midi(n2e(cHN),tempo,0,9)},openHat:{name:`open-hihat_${tag}.mid`,data:midi(n2e(oHN),tempo,0,9)},crash:{name:`crash-cymbal_${tag}.mid`,data:midi(n2e(crN),tempo,0,9)},ride:{name:`ride-cymbal_${tag}.mid`,data:midi(n2e(rN),tempo,0,9)}};
+  ['melody','harmony','chords','bass','arp','pads','all','kick','snare','clap','closedHat','openHat','crash','ride'].forEach(id=>$(id).disabled=false);
   $('status').textContent=`Generated ${bars} bars in ${$('key').value} ${$('scale').options[$('scale').selectedIndex].text} at ${tempo} BPM.`;
   $('status').className='status ok'
 }
 $('seed').value=Math.floor(Math.random()*99999999)+1;$('style').onchange=()=>{$('edmWrap').style.display=$('style').value==='edm'?'':'none'};
 $('generate').onclick=generate;
-['melody','harmony','chords','bass','arp','kick','snare','clap','closedHat','openHat','crash','ride'].forEach(id=>$(id).onclick=()=>dl(files[id].name,files[id].data));
-$('all').onclick=()=>saveFolder(['melody','harmony','chords','bass','arp'],['kick','snare','clap','closedHat','openHat','crash','ride'],'all music');
+['melody','harmony','chords','bass','arp','pads','kick','snare','clap','closedHat','openHat','crash','ride'].forEach(id=>$(id).onclick=()=>dl(files[id].name,files[id].data));
+$('all').onclick=()=>saveFolder(['melody','harmony','chords','bass','arp','pads'],['kick','snare','clap','closedHat','openHat','crash','ride'],'all music');
 })();
 </script>
 </body>
