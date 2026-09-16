@@ -1,0 +1,892 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MIDI Generator v2</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #09090b;
+      --surface: #111113;
+      --card: #151518;
+      --border: #222228;
+      --border-h: #333340;
+      --text: #fafafa;
+      --text2: #888898;
+      --text3: #555568;
+      --accent: #7c3aed;
+      --accent-l: #a78bfa;
+      --accent-g: rgba(124,58,237,.12);
+      --accent-g2: rgba(124,58,237,.25);
+      --cyan: #06b6d4;
+      --green: #22c55e;
+      --grad: linear-gradient(135deg,#7c3aed 0%,#3b82f6 100%);
+      --grad2: linear-gradient(135deg,#7c3aed 0%,#06b6d4 100%);
+      --r: 10px;
+      --rl: 14px;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;line-height:1.5}
+
+    /* Background effects */
+    .bg{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+    .bg::before{content:'';position:absolute;top:-30%;left:50%;transform:translateX(-50%);width:120%;height:60%;background:radial-gradient(ellipse,rgba(124,58,237,.06),transparent 70%)}
+    .bg::after{content:'';position:absolute;bottom:-20%;right:-10%;width:60%;height:50%;background:radial-gradient(ellipse,rgba(6,182,212,.04),transparent 70%)}
+
+    .wrap{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:48px 28px 40px}
+
+    /* Header */
+    .hdr{text-align:center;margin-bottom:48px;position:relative}
+    .logo{display:inline-flex;align-items:center;gap:12px;margin-bottom:20px}
+    .logo-icon{width:44px;height:44px;background:var(--grad);border-radius:12px;display:grid;place-items:center;font-size:20px;box-shadow:0 4px 20px rgba(124,58,237,.3)}
+    .logo-text{font-size:20px;font-weight:800;letter-spacing:-.03em}
+    .logo-text span{background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    h1{font-size:clamp(2.2rem,4.5vw,3.2rem);font-weight:900;letter-spacing:-.04em;line-height:1.1;margin-bottom:12px}
+    .tagline{color:var(--text2);font-size:.9rem;max-width:480px;margin:0 auto}
+
+    /* Two-column layout */
+    .columns{display:grid;grid-template-columns:340px 1fr;gap:20px;align-items:start}
+
+    /* Sidebar */
+    .sidebar{display:flex;flex-direction:column;gap:14px}
+
+    /* Cards */
+    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--rl);padding:20px;transition:border-color .15s}
+    .card:hover{border-color:var(--border-h)}
+    .card-head{display:flex;align-items:center;gap:8px;margin-bottom:16px}
+    .card-icon{width:24px;height:24px;background:var(--accent-g);border:1px solid rgba(124,58,237,.15);border-radius:6px;display:grid;place-items:center;font-size:11px;color:var(--accent-l)}
+    .card-title{font-size:11px;font-weight:700;color:var(--text);letter-spacing:.06em;text-transform:uppercase}
+
+    /* Form */
+    .fields{display:flex;flex-direction:column;gap:10px}
+    .field{display:flex;flex-direction:column;gap:4px}
+    .field label{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.1em;text-transform:uppercase}
+    .field select,.field input{width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:7px;font-family:inherit;font-size:12px;font-weight:500;outline:none;transition:all .12s;-webkit-appearance:none;appearance:none}
+    .field select{cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' fill='none' stroke='%23555568' stroke-width='2'%3E%3Cpath d='M2 3.5l3 3 3-3'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+    .field select:hover,.field input:hover{border-color:var(--border-h)}
+    .field select:focus,.field input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-g)}
+
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+
+    /* Slider */
+    .slider{-webkit-appearance:none;appearance:none;width:100%;height:6px;background:var(--surface);border:1px solid var(--border);border-radius:7px;outline:none;cursor:pointer}
+    .slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:16px;height:16px;background:var(--accent);border-radius:50%;cursor:pointer;box-shadow:0 2px 8px rgba(124,58,237,.4)}
+    .slider::-moz-range-thumb{width:16px;height:16px;background:var(--accent);border-radius:50%;cursor:pointer;border:none;box-shadow:0 2px 8px rgba(124,58,237,.4)}
+    .slider:hover{border-color:var(--accent)}
+
+    /* Toggles */
+    .toggles{display:flex;gap:14px;margin-top:4px}
+    .toggle{display:flex;align-items:center;gap:6px;cursor:pointer}
+    .toggle input{width:14px;height:14px;accent-color:var(--accent);cursor:pointer}
+    .toggle span{font-size:11px;font-weight:500;color:var(--text2)}
+
+    /* Main content */
+    .main{display:flex;flex-direction:column;gap:14px}
+
+    /* Parts grid */
+    .parts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+    .part{padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);transition:all .15s;position:relative;overflow:hidden}
+    .part::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--grad);opacity:0;transition:opacity .15s}
+    .part:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.4)}
+    .part:hover::before{opacity:1}
+    .part-icon{font-size:18px;margin-bottom:8px}
+    .part h3{font-size:11px;font-weight:700;color:var(--text);margin-bottom:2px}
+    .part p{font-size:10px;color:var(--text3);line-height:1.4}
+
+    /* Generate button */
+    .gen-wrap{position:relative}
+    .btn-gen{width:100%;padding:14px 20px;background:var(--grad);border:none;border-radius:var(--r);color:#fff;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;letter-spacing:.01em;position:relative;z-index:1}
+    .btn-gen::before{content:'';position:absolute;inset:0;border-radius:var(--r);background:linear-gradient(135deg,#8b5cf6,#06b6d4);opacity:0;transition:opacity .15s;z-index:-1}
+    .btn-gen:hover{transform:translateY(-1px);box-shadow:0 8px 32px rgba(124,58,237,.4)}
+    .btn-gen:hover::before{opacity:1}
+    .btn-gen:active{transform:translateY(0)}
+    .btn-gen:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none}
+    .status{margin-top:10px;font-size:11px;color:var(--text3);min-height:16px}
+    .status.ok{color:var(--green)}
+
+    /* Downloads */
+    .downloads{border:1px solid var(--border);border-radius:var(--r);background:var(--card);overflow:hidden}
+    .downloads summary{padding:13px 16px;font-size:11px;font-weight:700;color:var(--text);cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;transition:background .12s}
+    .downloads summary:hover{background:var(--surface)}
+    .downloads summary::before{content:'\203A';color:var(--accent);font-size:14px;font-weight:700;transition:transform .15s;line-height:1}
+    .downloads[open] summary::before{transform:rotate(90deg)}
+    .downloads summary::-webkit-details-marker{display:none}
+    .dl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px;padding:0 12px 12px}
+    .dl-btn{padding:8px 10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text2);font-family:inherit;font-size:10px;font-weight:600;cursor:pointer;transition:all .1s;display:flex;align-items:center;gap:6px;white-space:nowrap}
+    .dl-btn:hover:not(:disabled){background:var(--border);color:var(--text);border-color:var(--border-h)}
+    .dl-btn:disabled{opacity:.2;cursor:not-allowed}
+    .dl-btn .ico{font-size:12px}
+
+    /* Folder export */
+    .folder{display:flex;align-items:center;justify-content:space-between;gap:14px;background:linear-gradient(135deg,rgba(124,58,237,.04),rgba(6,182,212,.04));border-color:rgba(124,58,237,.1)}
+    .folder h3{font-size:12px;font-weight:700;margin-bottom:2px}
+    .folder p{font-size:10px;color:var(--text2)}
+    .folder code{color:var(--accent-l);font-size:10px;font-weight:600;background:var(--accent-g);padding:2px 6px;border-radius:4px}
+    .btn-outline{padding:9px 16px;background:transparent;border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;transition:all .12s;white-space:nowrap;flex-shrink:0}
+    .btn-outline:hover:not(:disabled){background:var(--card);border-color:var(--accent)}
+    .btn-outline:disabled{opacity:.2;cursor:not-allowed}
+
+    /* Footer */
+    .footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+    .footer-note{font-size:10px;color:var(--text3);max-width:500px}
+    .footer-copy{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.03em}
+
+    /* Responsive */
+    @media(max-width:900px){.columns{grid-template-columns:1fr}.parts{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:600px){.wrap{padding:32px 16px}.parts{grid-template-columns:1fr}.row,.row3{grid-template-columns:1fr}.folder{flex-direction:column;text-align:center}.footer{flex-direction:column;text-align:center}}
+  </style>
+</head>
+<body>
+<div class="bg"></div>
+<div class="wrap">
+  <header class="hdr">
+    <div class="logo">
+      <div class="logo-icon">ΓÖ½</div>
+      <div class="logo-text"><span>MIDI</span> Generator</div>
+    </div>
+    <h1>Create Professional MIDI Parts</h1>
+    <p class="tagline">Generate genre-aware melodies, harmonies, chords, and drums with musical phrasing, arrangement-ready exports, swing/groove, velocity curves, chord progressions, time signatures, and tempo automation.</p>
+  </header>
+
+  <div class="columns">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="card">
+        <div class="card-head"><div class="card-icon">ΓÜÖ</div><div class="card-title">Settings</div></div>
+        <div class="fields">
+          <div class="field"><label>Genre</label><select id="style"><option value="pop">Pop</option><option value="edm">EDM</option><option value="ambient">Ambient</option><option value="hiphop">Hip-hop</option><option value="lofi">Lo-fi</option><option value="cinematic">Cinematic</option><option value="rnb">R&amp;B / Soul</option><option value="rock">Rock</option></select></div>
+          <div class="field" id="edmWrap" style="display:none"><label>EDM Sub-genre</label><select id="edmStyle"><option value="house">House</option><option value="basshouse">Bass House</option><option value="progressive">Progressive</option><option value="dubstep">Dubstep</option><option value="trance">Trance</option><option value="futurebass">Future Bass</option><option value="techno">Techno</option><option value="dnb">Drum &amp; Bass</option></select></div>
+          <div class="row">
+            <div class="field"><label>Key</label><select id="key"><option>C</option><option>CΓÖ»/DΓÖ¡</option><option>D</option><option>DΓÖ»/EΓÖ¡</option><option>E</option><option>F</option><option>FΓÖ»/GΓÖ¡</option><option>G</option><option>GΓÖ»/AΓÖ¡</option><option>A</option><option>AΓÖ»/BΓÖ¡</option><option>B</option></select></div>
+            <div class="field"><label>Scale</label><select id="scale"><option value="major">Major</option><option value="minor">Natural minor</option><option value="dorian">Dorian</option><option value="mixolydian">Mixolydian</option><option value="pentatonic">Pentatonic</option><option value="blues">Blues</option><option value="wholeTone">Whole Tone</option><option value="diminished">Diminished</option><option value="chromatic">Chromatic</option></select></div>
+          </div>
+          <div class="row">
+            <div class="field"><label>Tempo</label><input id="tempo" type="number" min="50" max="220" value="110"></div>
+            <div class="field"><label>Bars</label><input id="bars" type="number" min="2" max="32" value="8"></div>
+          </div>
+          <div class="row">
+            <div class="field"><label>Seed</label><input id="seed" type="number" min="1" max="99999999"></div>
+            <div class="field"><label>Melody Oct</label><select id="melodyOct"><option value="60">4</option><option value="72">5</option></select></div>
+          </div>
+          <div class="field"><label>Bass Octave</label><select id="bassOct"><option value="36">2</option><option value="48">3</option></select></div>
+          <div class="field"><label>Time Signature</label><select id="timeSig"><option value="4/4">4/4</option><option value="3/4">3/4</option><option value="6/8">6/8</option><option value="5/4">5/4</option></select></div>
+          <div class="field"><label>Chord Progression</label><select id="chordProg">
+            <optgroup label="Pop">
+              <option value="I-V-vi-IV">I-V-vi-IV (Pop Classic)</option>
+              <option value="I-IV-V-I">I-IV-V-I (Pop Resolution)</option>
+              <option value="vi-IV-I-V">vi-IV-I-V (Pop Antitone)</option>
+              <option value="I-vi-IV-V">I-vi-IV-V (50s Doo-Wop)</option>
+              <option value="I-V-vi-iii-IV">I-V-vi-iii-IV (Canon)</option>
+              <option value="I-IV-vi-V">I-IV-vi-V (Axis of Awesome)</option>
+              <option value="I-IV-I-V">I-IV-I-V (Simple Pop)</option>
+              <option value="vi-V-IV-III">vi-V-IV-III (Minor Descend)</option>
+            </optgroup>
+            <optgroup label="Rock">
+              <option value="I-IV-V-IV">I-IV-V-IV (Rock Basics)</option>
+              <option value="I-bVII-IV-I">I-bVII-IV-I (Mixolydian Rock)</option>
+              <option value="i-bVII-bVI-bVII">i-bVII-bVI-bVII (Minor Rock)</option>
+              <option value="I-V-vi-IV">I-V-vi-IV (Alt Rock)</option>
+              <option value="I-bIII-IV-bVII">I-bIII-IV-bVII (Blues Rock)</option>
+              <option value="i-iv-v-i">i-iv-v-i (Minor Blues)</option>
+            </optgroup>
+            <optgroup label="Jazz">
+              <option value="ii-V-I">ii-V-I (Jazz Standard)</option>
+              <option value="I-vi-ii-V">I-vi-ii-V (Rhythm Changes)</option>
+              <option value="iii-vi-ii-V">iii-vi-ii-V (Circle Fifths)</option>
+              <option value="I-IV-iii-vi">I-IV-iii-vi (Jazz Waltz)</option>
+              <option value="ii-V-I-IV">ii-V-I-IV (Jazz Loop)</option>
+              <option value="I-bIII-bVII-IV">I-bIII-bVII-IV (Jazz Blues)</option>
+            </optgroup>
+            <optgroup label="R&amp;B / Soul">
+              <option value="I-iii-IV-V">I-iii-IV-V (Soul Classic)</option>
+              <option value="vi-IV-I-V">vi-IV-I-V (R&B Groove)</option>
+              <option value="I-vi-IV-V">I-vi-IV-V (Soul Ballad)</option>
+              <option value="ii-V-I-I">ii-V-I-I (Neo Soul)</option>
+              <option value="I-IV-bVII-IV">I-IV-bVII-IV (Funk)</option>
+            </optgroup>
+            <optgroup label="Hip-Hop">
+              <option value="i-bIII-bVII-IV">i-bIII-bVII-IV (Trap)</option>
+              <option value="vi-IV-I-V">vi-IV-I-V (Lo-Fi Hop)</option>
+              <option value="i-bVI-bIII-bVII">i-bVI-bIII-bVII (Dark Trap)</option>
+              <option value="I-vi-iii-IV">I-vi-iii-IV (Chill Hop)</option>
+              <option value="i-iv-v-i">i-iv-v-i (Boom Bap)</option>
+            </optgroup>
+            <optgroup label="EDM">
+              <option value="vi-IV-I-V">vi-IV-I-V (EDM Anthem)</option>
+              <option value="I-V-vi-IV">I-V-vi-IV (EDM Uplift)</option>
+              <option value="i-bVII-bVI-bVII">i-bVII-bVI-bVII (Dark EDM)</option>
+              <option value="I-IV-vi-V">I-IV-vi-V (Progressive)</option>
+              <option value="vi-V-IV-III">vi-V-IV-III (Trance Build)</option>
+              <option value="i-bVI-bIII-bVII">i-bVI-bIII-bVII (Dubstep)</option>
+            </optgroup>
+            <optgroup label="Classical">
+              <option value="I-IV-V-I">I-IV-V-I (Classical Cadence)</option>
+              <option value="I-V-vi-iii-IV-I-IV-V">I-V-vi-iii-IV-I-IV-V (Pachelbel)</option>
+              <option value="I-IV-vii-iii-vi-ii-V-I">I-IV-vii-iii-vi-ii-V-I (Circle Progression)</option>
+              <option value="i-iv-v-i">i-iv-v-i (Classical Minor)</option>
+              <option value="I-bVI-bVII-I">I-bVI-bVII-I (Aeolian Cadence)</option>
+            </optgroup>
+            <optgroup label="Blues">
+              <option value="I-I-I-I-IV-IV-I-I-V-IV-I-V">I-I-I-I-IV-IV-I-I-V-IV-I-V (12 Bar Blues)</option>
+              <option value="I-IV-I-V-IV-I">I-IV-I-V-IV-I (Quick Blues)</option>
+              <option value="i-i-i-i-iv-iv-i-i-V-iv-i-V">i-i-i-i-iv-iv-i-i-V-iv-i-V (Minor Blues)</option>
+            </optgroup>
+            <optgroup label="Ambient / Cinematic">
+              <option value="I-bVI-IV-bVII">I-bVI-IV-bVII (Epic)</option>
+              <option value="i-bIII-bVII-bVI">i-bIII-bVII-bVI (Cinematic Minor)</option>
+              <option value="I-IV-bVI-bVII">I-IV-bVI-bVII (Dreamy)</option>
+              <option value="vi-IV-bVII-bIII">vi-IV-bVII-bIII (Ambient Pad)</option>
+              <option value="I-bIII-bVII-IV">I-bIII-bVII-IV (Spacious)</option>
+            </optgroup>
+            <optgroup label="Latin / World">
+              <option value="i-bVII-bVI-V">i-bVII-bVI-V (Flamenco)</option>
+              <option value="I-V-vi-iii-IV-I-IV-V">I-V-vi-iii-IV-I-IV-V (Bossa Nova)</option>
+              <option value="i-iv-bVII-bIII">i-iv-bVII-bIII (Reggae)</option>
+            </optgroup>
+            <optgroup label="Custom">
+              <option value="custom">Custom (type below)</option>
+            </optgroup>
+          </select></div>
+          <div class="field" id="customProgWrap" style="display:none"><label>Custom Progression</label><input id="customProg" type="text" placeholder="I-V-vi-IV or i-III-VII-VI"></div>
+          <div class="field"><label>Swing / Groove</label><input id="swing" class="slider" type="range" min="0" max="100" value="0" step="1"><span id="swingVal" style="font-size:10px;color:var(--text3);text-align:right">0%</span></div>
+          <div class="field"><label>Velocity Curve</label><select id="velCurve"><option value="natural">Natural</option><option value="flat">Flat</option><option value="crescendo">Crescendo</option><option value="decrescendo">Decrescendo</option><option value="swell">Swell</option></select></div>
+          <div class="row">
+            <div class="field"><label>Start BPM</label><input id="startBpm" type="number" min="50" max="220" value="110"></div>
+            <div class="field"><label>End BPM</label><input id="endBpm" type="number" min="50" max="220" value="110"></div>
+          </div>
+        </div>
+        <div class="toggles" style="margin-top:12px">
+          <label class="toggle"><input id="includeCrash" type="checkbox" checked><span>Crash</span></label>
+          <label class="toggle"><input id="includeRide" type="checkbox" checked><span>Ride</span></label>
+        </div>
+      </div>
+
+      <div class="card" style="padding:0;border:none;background:none">
+        <button class="btn-gen" id="generate">Generate Parts</button>
+        <p class="status" id="status">Set your parameters, then generate.</p>
+      </div>
+
+      <details class="downloads">
+        <summary>MIDI Downloads</summary>
+        <div class="dl-grid">
+          <button class="dl-btn" id="melody" disabled><span class="ico">≡ƒÄ╣</span> Melody</button>
+          <button class="dl-btn" id="harmony" disabled><span class="ico">≡ƒÄ╢</span> Harmony</button>
+          <button class="dl-btn" id="chords" disabled><span class="ico">≡ƒÄ╕</span> Chords</button>
+          <button class="dl-btn" id="bass" disabled><span class="ico">≡ƒöè</span> Bass</button>
+          <button class="dl-btn" id="arp" disabled><span class="ico">Γ£¿</span> Arp</button>
+          <button class="dl-btn" id="pads" disabled><span class="ico">≡ƒîè</span> Pads</button>
+          <button class="dl-btn" id="kick" disabled><span class="ico">≡ƒÑü</span> Kick</button>
+          <button class="dl-btn" id="snare" disabled><span class="ico">≡ƒ¬ÿ</span> Snare</button>
+          <button class="dl-btn" id="clap" disabled><span class="ico">≡ƒæÅ</span> Clap</button>
+          <button class="dl-btn" id="closedHat" disabled><span class="ico">≡ƒöö</span> Closed Hat</button>
+          <button class="dl-btn" id="openHat" disabled><span class="ico">≡ƒöö</span> Open Hat</button>
+          <button class="dl-btn" id="crash" disabled><span class="ico">≡ƒÆÑ</span> Crash</button>
+          <button class="dl-btn" id="ride" disabled><span class="ico">≡ƒöö</span> Ride</button>
+        </div>
+      </details>
+
+      <div class="card folder">
+        <div><h3>Folder Export</h3><p>Save all to dated folder with <code>Drums</code> subfolder</p></div>
+        <button class="btn-outline" id="all" disabled>Save All</button>
+      </div>
+    </div>
+
+    <!-- Main content -->
+    <div class="main">
+      <div class="card">
+        <div class="card-head"><div class="card-icon">ΓÖ½</div><div class="card-title">Generated Parts</div></div>
+        <div class="parts">
+          <div class="part"><div class="part-icon">≡ƒÄ╣</div><h3>Melody</h3><p>Lead with motif development, phrase structure, and 3rd/4th jumps</p></div>
+          <div class="part"><div class="part-icon">≡ƒÄ╢</div><h3>Harmony</h3><p>Independent counter-melody with voice leading</p></div>
+          <div class="part"><div class="part-icon">≡ƒÄ╕</div><h3>Chords</h3><p>Unusual voicings: maj9, 7#11, quartal, chromatic mediant</p></div>
+          <div class="part"><div class="part-icon">≡ƒöè</div><h3>Bass</h3><p>Root-driven line with genre patterns</p></div>
+          <div class="part"><div class="part-icon">Γ£¿</div><h3>Arpeggiator</h3><p>Chord tones in rhythmic sequence</p></div>
+          <div class="part"><div class="part-icon">≡ƒîè</div><h3>Pads</h3><p>Sustained atmospheric chords</p></div>
+          <div class="part"><div class="part-icon">≡ƒÑü</div><h3>Drums</h3><p>Kick, snare, clap, hats, crash, ride</p></div>
+        </div>
+      </div>
+
+      <div class="card" style="background:linear-gradient(135deg,rgba(124,58,237,.05),rgba(6,182,212,.05));border-color:rgba(124,58,237,.12)">
+        <div class="card-head"><div class="card-icon">≡ƒÄ╡</div><div class="card-title">Music Theory</div></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div style="padding:12px;background:var(--surface);border-radius:8px;border:1px solid var(--border)">
+            <h4 style="font-size:10px;font-weight:700;color:var(--accent-l);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Melody</h4>
+            <p style="font-size:10px;color:var(--text3);line-height:1.5">Motif development, antecedent/consequent phrases, chord tone targeting, dynamic arcs</p>
+          </div>
+          <div style="padding:12px;background:var(--surface);border-radius:8px;border:1px solid var(--border)">
+            <h4 style="font-size:10px;font-weight:700;color:var(--accent-l);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Harmony</h4>
+            <p style="font-size:10px;color:var(--text3);line-height:1.5">3rd/4th interval jumps, voice leading, contrapuntal motion, independent rhythm</p>
+          </div>
+          <div style="padding:12px;background:var(--surface);border-radius:8px;border:1px solid var(--border)">
+            <h4 style="font-size:10px;font-weight:700;color:var(--accent-l);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Chords</h4>
+            <p style="font-size:10px;color:var(--text3);line-height:1.5">Extended voicings, quartal, chromatic mediant, clusters, genre-specific</p>
+          </div>
+          <div style="padding:12px;background:var(--surface);border-radius:8px;border:1px solid var(--border)">
+            <h4 style="font-size:10px;font-weight:700;color:var(--accent-l);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Drums</h4>
+            <p style="font-size:10px;color:var(--text3);line-height:1.5">GM percussion, genre patterns, four-on-floor, breakbeat, half-time</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p class="footer-note">General MIDI: piano, strings, electric piano, fingered bass, synth lead, GM percussion.</p>
+    <p class="footer-copy">&copy; 2026 Shyamanta &middot; All Rights Reserved</p>
+  </footer>
+</div>
+
+<script>
+(()=>{
+const $=id=>document.getElementById(id),keyRoots=[0,1,2,3,4,5,6,7,8,9,10,11];
+const scales={major:[0,2,4,5,7,9,11],minor:[0,2,3,5,7,8,10],dorian:[0,2,3,5,7,9,10],mixolydian:[0,2,4,5,7,9,10],pentatonic:[0,2,4,7,9],blues:[0,3,5,6,7,10],wholeTone:[0,2,4,6,8,10],diminished:[0,2,3,5,6,8,9,11],chromatic:[0,1,2,3,4,5,6,7,8,9,10,11]};
+let files={};
+function rng(s){let v=s>>>0;return()=>((v=(v*1664525+1013904223)>>>0)/4294967296)}
+function vlq(n){const b=[n&127];while(n>>=7)b.unshift((n&127)|128);return b}
+function chunk(t,bytes){const n=bytes.length;return[...t].map(x=>x.charCodeAt(0)).concat([(n>>>24)&255,(n>>>16)&255,(n>>>8)&255,n&255],bytes)}
+function n2e(notes){const a=[];notes.forEach(n=>{a.push({time:n.t,kind:0,note:n.note,vel:n.vel||88},{time:n.t+n.d,kind:1,note:n.note,vel:0})});return a}
+function dl(name,data){const u=URL.createObjectURL(new Blob([data],{type:'audio/midi'}));const a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),500)}
+function tsFolder(g,k,b){const d=new Date(),p=n=>String(n).padStart(2,'0'),c=v=>v.replace(/[^a-z0-9]+/gi,'-').toLowerCase();return`${c(g)}_${c(k)}_${b}bpm_${String(d.getFullYear()).slice(-2)}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}`}
+async function saveFolder(ids,drumIds,label){
+  const all=[...ids,...drumIds];
+  if(!window.showDirectoryPicker){all.forEach((id,i)=>setTimeout(()=>dl(files[id].name,files[id].data),i*300));$('status').textContent='Folder API unavailable ΓÇö files downloaded individually.';return}
+  try{$('status').textContent='Choose a folder...';const root=await window.showDirectoryPicker({mode:'readwrite'});const sel=$('style').value==='edm'?$('edmStyle').value:$('style').value;const folder=await root.getDirectoryHandle(tsFolder(sel,$('key').value,$('tempo').value),{create:true});for(const id of ids){if(!files[id]||!files[id].data)continue;const f=await folder.getFileHandle(files[id].name,{create:true});const s=await f.createWritable();await s.write(files[id].data);await s.close()}if(drumIds.length){const df=await folder.getDirectoryHandle('Drums',{create:true});for(const id of drumIds){if(!files[id]||!files[id].data)continue;const f=await df.getFileHandle(files[id].name,{create:true});const s=await f.createWritable();await s.write(files[id].data);await s.close()}}$('status').textContent=`Saved to ${root.name}\\${folder.name}`;$('status').className='status ok'}catch(e){$('status').textContent=e.name==='AbortError'?'Cancelled.':`Error: ${e.message}`}
+}
+
+function parseProgression(str){
+  if(!str||!str.trim())return null;
+  const map={i:0,ii:1,iii:2,iv:3,v:4,vi:5,vii:6};
+  return str.trim().split('-').map(s=>{
+    const m=s.toLowerCase();
+    if(map[m]!==undefined)return map[m];
+    if(m.endsWith('m')&&map[m.slice(0,-1)]!==undefined)return map[m.slice(0,-1)];
+    return map[m]||0;
+  });
+}
+
+function applySwing(t,bar,beat,ticksPerBeat,swingAmt){
+  if(swingAmt===0)return t;
+  const beatInBar=Math.floor((t%ticksPerBar)/ticksPerBeat);
+  if(beatInBar%2===1)return t+Math.round(swingAmt*60);
+  return t;
+}
+
+function applyVelocityCurve(vel,bar,bars,curve){
+  if(curve==='flat')return 80;
+  if(curve==='crescendo')return Math.round(vel*(0.5+(bar/bars)*0.5));
+  if(curve==='decrescendo')return Math.round(vel*(1.0-(bar/bars)*0.4));
+  if(curve==='swell')return Math.round(vel*(0.6+Math.sin(bar/bars*Math.PI)*0.4));
+  return vel;
+}
+
+function getTempoForBar(bar,bars,startBpm,endBpm){
+  if(bars<=1)return startBpm;
+  return startBpm+(endBpm-startBpm)*(bar/(bars-1));
+}
+
+function midi(events,tempo,prog,ch=0,tempoArray,bars){
+  const us=Math.round(60000000/tempo);
+  const cond=[0,0xFF,0x51,3,(us>>>16)&255,(us>>>8)&255,us&255,0,0xFF,0x58,4,4,2,24,8,0,0xFF,0x2F,0];
+  let o=[0,0xC0|ch,prog];
+  if(tempoArray&&bars>1){
+    let tempoAt=0;let tempoTick=0;
+    const tempoEvents=[];
+    for(let b=1;b<bars;b++){
+      const bUs=Math.round(60000000/tempoArray[b]);
+      const deltaTick=b*1920-tempoTick;
+      tempoTick=b*1920;
+      tempoEvents.push({tick:tempoTick,us:bUs});
+    }
+    events.sort((a,b)=>a.time-b.time||a.kind-b.kind);
+    let ei=0;let at=0;
+    events.forEach(e=>{
+      while(ei<tempoEvents.length&&tempoEvents[ei].tick<=e.time){
+        o.push(...vlq(tempoEvents[ei].tick-at),0xFF,0x51,3,(tempoEvents[ei].us>>>16)&255,(tempoEvents[ei].us>>>8)&255,tempoEvents[ei].us&255);
+        at=tempoEvents[ei].tick;
+        ei++;
+      }
+      o.push(...vlq(e.time-at),(e.kind===0?0x90:0x80)|ch,e.note,e.kind===0?e.vel:64);
+      at=e.time;
+    });
+    while(ei<tempoEvents.length){
+      o.push(...vlq(tempoEvents[ei].tick-at),0xFF,0x51,3,(tempoEvents[ei].us>>>16)&255,(tempoEvents[ei].us>>>8)&255,tempoEvents[ei].us&255);
+      at=tempoEvents[ei].tick;
+      ei++;
+    }
+  }else{
+    events.sort((a,b)=>a.time-b.time||a.kind-b.kind).forEach(e=>{o.push(...vlq(e.time-at),(e.kind===0?0x90:0x80)|ch,e.note,e.kind===0?e.vel:64);at=e.time});
+  }
+  o.push(0,0xFF,0x2F,0);
+  return new Uint8Array(chunk('MThd',[0,1,0,2,1,224]).concat(chunk('MTrk',cond),chunk('MTrk',o)))
+}
+
+function generate(){
+  const root=keyRoots[$('key').selectedIndex],sc=scales[$('scale').value],bars=+$('bars').value,tempo=+$('tempo').value,style=$('style').value==='edm'?$('edmStyle').value:$('style').value,r=rng(+$('seed').value||1),mB=+$('melodyOct').value+root,bB=+$('bassOct').value+root,isEDM=['house','basshouse','progressive','dubstep','trance','futurebass','techno','dnb'].includes(style);
+
+  const swingAmt=+$('swing').value/100;
+  const velCurve=$('velCurve').value;
+  const customProg=parseProgression($('chordProg').value==='custom'?$('customProg').value:$('chordProg').value);
+  const timeSig=$('timeSig').value;
+  const startBpm=+$('startBpm').value;
+  const endBpm=+$('endBpm').value;
+  const hasTempoAutomation=startBpm!==endBpm;
+
+  let ticksPerBar,ticksPerBeat,beatsPerBar;
+  if(timeSig==='4/4'){ticksPerBar=1920;ticksPerBeat=480;beatsPerBar=4}
+  else if(timeSig==='3/4'){ticksPerBar=1440;ticksPerBeat=480;beatsPerBar=3}
+  else if(timeSig==='6/8'){ticksPerBar=1440;ticksPerBeat=240;beatsPerBar=6}
+  else{ticksPerBar=2000;ticksPerBeat=400;beatsPerBar=5}
+
+  let tempoArray=null;
+  if(hasTempoAutomation){tempoArray=[];for(let b=0;b<bars;b++)tempoArray.push(getTempoForBar(b,bars,startBpm,endBpm))}
+
+  const patPools={
+    pop:[[0,4,5,3],[4,5,3,0],[5,3,0,4],[0,3,4,5],[3,4,5,3]],
+    ambient:[[0,5,3,4],[0,3,5,4],[5,3,4,0],[3,4,0,5]],
+    house:[[0,5,1,4],[0,3,5,4],[5,1,4,0],[3,5,4,0]],
+    basshouse:[[0,3,5,4],[0,5,3,4],[3,5,4,0],[5,3,4,0]],
+    progressive:[[0,4,5,3],[5,3,0,4],[0,3,4,5],[3,0,4,5]],
+    dubstep:[[0,3,5,4],[0,5,3,4],[3,5,4,0],[5,3,4,0]],
+    trance:[[0,5,1,4],[5,1,4,0],[0,3,5,4],[3,0,5,4]],
+    futurebass:[[0,5,3,4],[5,3,0,4],[0,4,5,3],[3,0,4,5]],
+    techno:[[0,1,3,4],[0,3,4,1],[1,3,4,0],[3,0,1,4]],
+    dnb:[[0,5,1,4],[5,1,4,0],[0,3,5,4],[3,5,4,0]],
+    hiphop:[[0,3,5,4],[0,5,3,4],[3,5,4,0],[5,3,0,4]],
+    lofi:[[0,3,5,4],[5,3,0,4],[0,5,3,4],[3,0,5,4]],
+    cinematic:[[0,5,3,4],[0,3,5,4],[5,3,4,0],[3,4,0,5]],
+    rnb:[[0,5,1,4],[5,1,4,0],[0,3,5,4],[3,0,4,5]],
+    rock:[[0,4,5,3],[0,3,4,5],[4,5,3,0],[3,0,4,5]]
+  };
+  const pats=(patPools[style]||patPools.pop)[Math.floor(r()*(patPools[style]||patPools.pop).length)];
+
+  let prog;
+  if(customProg){prog=[];for(let i=0;i<bars;i++)prog.push(customProg[i%customProg.length])}
+  else{prog=Array.from({length:bars},(_,i)=>pats[i%pats.length])}
+
+  const cN=[],bN=[],mN=[],hN=[],aN=[],pdN=[],kN=[],sN=[],clN=[],cHN=[],oHN=[],crN=[],rN=[];
+  let motif=[],motifRhy=[];
+  const lNote=(d,base)=>base+sc[((d%sc.length)+sc.length)%sc.length]+12*Math.floor(d/sc.length);
+  const snapToScale=n=>{const oct=n-((n%12)+12)%12;const pc=((n%12)+12)%12;let best=sc[0],bestD=12;for(const s of sc){const d=Math.abs(pc-s);if(d<bestD){bestD=d;best=s}}return oct+best};
+
+  const melodicProfiles={
+    pop:{rhythm:[[4,2,2,4,2,2],[2,2,4,2,2,4],[4,4,2,2,4],[6,2,4,2,2],[2,4,2,2,4,2],[4,2,2,2,2,4],[3,3,2,2,2,4],[2,2,2,4,2,4],[4,2,4,2,2,2],[6,2,2,2,2,4],[8,4,4],[4,2,2,2,4,2]],stepChance:.78,chordToneChance:.53,leapChance:.12,repeatChance:.45,range:[64,84],contour:'arch',phraseEnd:'descend'},
+    hiphop:{rhythm:[[4,2,2,4,2,2],[6,2,4,2,2],[2,4,2,2,4,2],[4,4,4,4],[8,4,4],[2,2,4,2,2,4],[4,2,4,4,2,2],[6,4,2,2,4],[3,3,3,3,2,2],[2,2,2,2,4,4],[10,4,2],[4,2,2,2,2,4]],stepChance:.55,chordToneChance:.67,leapChance:.3,repeatChance:.6,range:[48,76],contour:'flat',phraseEnd:'repeat'},
+    rnb:{rhythm:[[4,2,2,2,2,4],[6,2,4,2,2],[4,2,2,4,2,2],[2,2,4,2,2,4],[3,3,2,4,2,2],[2,4,4,2,2,4],[4,2,4,2,2,2],[8,4,4],[6,2,2,2,2,4],[2,2,2,2,4,4],[4,4,2,2,2,2],[10,2,4]],stepChance:.72,chordToneChance:.7,leapChance:.18,repeatChance:.35,range:[55,84],contour:'wave',phraseEnd:'resolve'},
+    ambient:{rhythm:[[16],[12,4],[8,8],[8,4,4],[10,6],[6,6,4],[14,2],[8,8],[6,4,6],[16],[12,4],[8,4,4]],stepChance:.9,chordToneChance:.88,leapChance:.05,repeatChance:.6,range:[48,72],contour:'flat',phraseEnd:'sustain'},
+    rock:{rhythm:[[4,2,2,4,2,2],[4,4,4,4],[6,2,4,2,2],[4,2,2,2,2,4],[2,4,2,2,4,2],[4,2,4,2,2,2],[6,4,2,2,4],[8,4,4],[2,2,4,4,2,2],[4,2,2,2,4,2],[3,3,2,2,2,4],[10,2,4]],stepChance:.58,chordToneChance:.73,leapChance:.32,repeatChance:.2,range:[48,79],contour:'arch',phraseEnd:'leap'},
+    lofi:{rhythm:[[6,2,4,2,2],[8,4,4],[4,4,4,4],[6,2,8],[10,4,2],[4,2,2,2,2,4],[8,2,4,2],[6,4,4,2],[2,2,4,4,4],[12,4],[4,2,6,2,2],[8,8]],stepChance:.82,chordToneChance:.78,leapChance:.08,repeatChance:.5,range:[55,72],contour:'flat',phraseEnd:'descend'},
+    cinematic:{rhythm:[[8,4,4],[12,4],[8,8],[4,4,8],[16],[6,6,4],[10,6],[14,2],[8,4,4],[4,8,4],[12,4],[6,4,6]],stepChance:.7,chordToneChance:.72,leapChance:.3,repeatChance:.15,range:[40,84],contour:'dramatic',phraseEnd:'ascend'},
+    house:{rhythm:[[4,2,2,4,2,2],[4,2,2,2,2,4],[2,2,4,2,2,4],[4,4,2,2,4],[3,3,2,2,2,4],[2,4,4,2,2,4],[4,2,4,2,2,2],[6,2,2,2,2,4],[2,2,2,4,2,4],[4,2,2,2,4,2],[8,4,4],[6,4,2,2,4]],stepChance:.72,chordToneChance:.76,leapChance:.14,repeatChance:.38,range:[60,84],contour:'build',phraseEnd:'resolve'},
+    basshouse:{rhythm:[[4,2,2,4,2,2],[6,2,4,2,2],[4,2,2,2,2,4],[4,4,4,4],[2,4,2,2,4,2],[4,2,4,2,2,2],[8,4,4],[3,3,3,3,2,2],[6,4,2,2,4],[2,2,4,4,2,2],[4,2,2,2,4,2],[10,2,4]],stepChance:.62,chordToneChance:.68,leapChance:.28,repeatChance:.35,range:[55,79],contour:'build',phraseEnd:'resolve'},
+    progressive:{rhythm:[[6,2,4,2,2],[4,2,2,4,2,2],[8,4,4],[4,4,2,2,4],[3,3,2,2,2,4],[2,2,4,2,2,4],[4,2,4,2,2,2],[6,4,2,2,4],[2,4,4,2,2,4],[4,2,2,2,4,2],[10,4,2],[8,8]],stepChance:.78,chordToneChance:.82,leapChance:.08,repeatChance:.55,range:[60,84],contour:'build',phraseEnd:'resolve'},
+    dubstep:{rhythm:[[8,4,4],[12,4],[8,8],[4,8,4],[6,6,4],[10,2,4],[4,4,4,4],[14,2],[6,4,2,4],[8,4,4],[12,4],[4,2,2,8]],stepChance:.5,chordToneChance:.55,leapChance:.4,repeatChance:.3,range:[55,79],contour:'dramatic',phraseEnd:'leap'},
+    trance:{rhythm:[[4,2,2,4,2,2],[4,2,2,2,2,4],[4,2,2,4,2,2],[2,2,4,2,2,4],[3,3,2,2,2,4],[2,4,4,2,2,4],[4,2,4,2,2,2],[6,2,2,2,2,4],[2,2,2,4,2,4],[4,2,2,2,4,2],[8,4,4],[6,4,2,2,4]],stepChance:.82,chordToneChance:.86,leapChance:.08,repeatChance:.42,range:[60,84],contour:'build',phraseEnd:'ascend'},
+    futurebass:{rhythm:[[6,2,4,2,2],[4,4,4,4],[8,4,4],[4,2,2,4,2,2],[2,2,4,2,2,4],[3,3,2,2,2,4],[2,4,4,2,2,4],[4,2,4,2,2,2],[6,4,2,2,4],[2,2,2,4,2,4],[10,4,2],[8,8]],stepChance:.76,chordToneChance:.82,leapChance:.12,repeatChance:.42,range:[60,84],contour:'wave',phraseEnd:'resolve'},
+    techno:{rhythm:[[4,2,2,4,2,2],[4,2,2,2,2,4],[4,2,2,4,2,2],[4,2,2,2,2,4],[3,3,2,2,2,4],[2,4,4,2,2,4],[4,2,4,2,2,2],[6,2,2,2,2,4],[2,2,2,4,2,4],[4,2,2,2,4,2],[8,4,4],[6,4,2,2,4]],stepChance:.6,chordToneChance:.65,leapChance:.22,repeatChance:.5,range:[55,79],contour:'flat',phraseEnd:'repeat'},
+    dnb:{rhythm:[[2,2,2,2,4,2,2],[4,2,2,4,2,2],[2,2,4,2,2,4],[4,2,2,2,2,4],[3,3,2,2,2,4],[2,4,4,2,2,4],[4,2,4,2,2,2],[6,2,2,2,2,4],[2,2,2,4,2,4],[4,2,2,2,4,2],[8,4,4],[6,4,2,2,4]],stepChance:.68,chordToneChance:.72,leapChance:.18,repeatChance:.38,range:[60,84],contour:'build',phraseEnd:'resolve'}
+  };
+
+  const chordExt={
+    pop:'add9',hiphop:'m7',rnb:'maj9',lofi:'maj7',ambient:'sus4',cinematic:'maj7#11',
+    rock:'power',house:'dom7',basshouse:'m7',progressive:'add9plus',dubstep:'sub',
+    trance:'maj9',futurebass:'maj9',techno:'power',dnb:'sub'
+  }[style]||'maj';
+
+  prog.forEach((deg,bar)=>{
+    const barTempo=tempoArray?tempoArray[bar]:tempo;
+
+    // Chord voicings with genre-specific inversions
+    const ct=o=>mB-12+sc[(deg+o)%7]+12*Math.floor((deg+o)/7);
+    const tri=[ct(0),ct(2),ct(4)];
+    if(chordExt==='add9')tri.push(ct(7));
+    else if(chordExt==='m7'){tri[1]=ct(1);tri.push(ct(6))}
+    else if(chordExt==='maj9'){tri.push(ct(6));tri.push(ct(8))}
+    else if(chordExt==='maj7'){tri.push(ct(6))}
+    else if(chordExt==='sus4'){tri[1]=ct(3);tri.push(ct(6))}
+    else if(chordExt==='maj7#11'){tri.push(ct(6));tri.push(ct(9))}
+    else if(chordExt==='power'){tri.push(ct(7))}
+    else if(chordExt==='dom7'){tri.push(ct(6))}
+    else if(chordExt==='7sus4'){tri[1]=ct(3);tri.push(ct(6))}
+    else if(chordExt==='sub'){}
+    else if(chordExt==='add9plus'){tri.push(ct(7));if(r()<.3)tri[1]=ct(1)}
+    // Genre-specific voicings
+    let voiced;
+    if(style==='rock'){
+      voiced=[tri[0],tri[0]+7,tri[0]+12];
+    }else if(style==='rnb'){
+      voiced=tri.map((n,i)=>snapToScale(i===0?n+12:i===1?n+12:n+12));
+      if(voiced.length>3)voiced[3]=snapToScale(voiced[2]+3);
+    }else if(style==='lofi'){
+      voiced=tri.map((n,i)=>snapToScale(i%2===1?n+12:n+12));
+    }else if(style==='ambient'||style==='cinematic'){
+      voiced=tri.map((n,i)=>snapToScale(i%2===0?n+12:n+24));
+    }else if(style==='hiphop'){
+      voiced=[tri[0],tri[0]+10];
+    }else if(style==='dubstep'||style==='dnb'){
+      voiced=[tri[0]];
+    }else if(style==='trance'){
+      voiced=tri.map((n,i)=>snapToScale(i%2===0?n+12:n+12));
+      if(voiced.length>3)voiced[3]=snapToScale(voiced[2]+4);
+    }else if(style==='futurebass'){
+      voiced=tri.map((n,i)=>snapToScale(i%2===0?n+12:n+24));
+      if(voiced.length>3)voiced[3]=snapToScale(voiced[2]+4);
+    }else if(style==='techno'){
+      voiced=[tri[0],tri[0]+7];
+    }else{
+      voiced=tri.map((n,i)=>snapToScale(i%3===1?n+12:n));
+    }
+    const chordDur=isEDM?840:1800;
+    if(style==='ambient'||style==='cinematic'){voiced.forEach((n,i)=>cN.push({t:bar*ticksPerBar+i*40,d:ticksPerBar-i*40,note:n,vel:applyVelocityCurve(50+Math.floor(r()*10),bar,bars,velCurve)}))}
+    else if(isEDM&&r()>.35){
+      const sp=[0,Math.round(ticksPerBar*.25),Math.round(ticksPerBar*.5),Math.round(ticksPerBar*.75)].filter(()=>r()>.4);
+      voiced.forEach(n=>sp.forEach((s,si)=>cN.push({t:bar*ticksPerBar+s,d:180+si*20,note:n,vel:applyVelocityCurve(68+Math.floor(r()*14),bar,bars,velCurve)})))
+    }
+    else{voiced.forEach((n,i)=>cN.push({t:bar*ticksPerBar+i*15,d:chordDur,note:n,vel:applyVelocityCurve(62+Math.floor(r()*10),bar,bars,velCurve)}))}
+
+    // Progressive house: smooth voice leading
+    if(style==='progressive'){
+      if(bar>0){
+        const prevTri=cN.filter(n=>n.t>=(bar-1)*ticksPerBar&&n.t<bar*ticksPerBar);
+        if(prevTri.length>0){
+          voiced.forEach((n,i)=>{
+            const closest=prevTri.reduce((a,p)=>Math.abs(p.note-n)<Math.abs(p.note-a)?p.note:a,prevTri[0].note);
+            if(Math.abs(closest-n)>7)voiced[i]=n-12;
+          });
+        }
+      }
+    }
+    // Progressive house: rhythmic supersaw stabs
+    if(style==='progressive'){
+      const stabPattern=[0,360,720,1080,1440,1800];
+      voiced.forEach(n=>{
+        stabPattern.forEach((s,i)=>{
+          const vel=i%2===0?72+Math.floor(r()*10):58+Math.floor(r()*8);
+          const dur=140+Math.floor(r()*40);
+          cN.push({t:bar*ticksPerBar+s,d:dur,note:n,vel});
+        });
+      });
+    }
+    // Progressive house: sidechain pumping
+    if(style==='progressive'){
+      cN.forEach(n=>{
+        const beatPos=n.t%ticksPerBar;
+        if(beatPos<120) n.vel=Math.round(n.vel*0.6);
+        else if(beatPos<240) n.vel=Math.round(n.vel*0.85);
+        else if(beatPos<360) n.vel=Math.round(n.vel*0.95);
+      });
+    }
+
+    const aS=style==='dubstep'?4:style==='dnb'?16:8;
+    const aL=ticksPerBar/aS;
+    const aO=style==='techno'?[0,1,2,1]:style==='progressive'?[0,1,2,3,2,1]:[0,1,2,1,2,1,0,1];
+    for(let s=0;s<aS;s++){const t=snapToScale(tri[aO[s%aO.length]%tri.length]+12);aN.push({t:bar*ticksPerBar+s*aL,d:Math.round(aL*.78),note:t,vel:applyVelocityCurve(style==='ambient'?58:82,bar,bars,velCurve)})}
+
+    // ─── BASS: genre-specific patterns ───
+    const rn=bB+sc[deg];
+    if(style==='dubstep'||style==='dnb'){
+      bN.push({t:bar*ticksPerBar,d:ticksPerBar-60,note:rn,vel:96});
+      if(style==='dnb'&&r()>.6)bN.push({t:bar*ticksPerBar+720,d:360,note:rn+7,vel:80});
+    }else if(style==='house'){
+      const dotted8=[0,450,900,1350];
+      dotted8.forEach((x,j)=>{
+        const note=j%2===1?rn+12:rn;
+        bN.push({t:bar*ticksPerBar+x,d:330,note,vel:j===0?100:88});
+      });
+      if(r()>.5)bN.push({t:bar*ticksPerBar+Math.round(ticksPerBar*.125),d:240,note:rn+12,vel:72});
+    }else if(style==='trance'){
+      [0,Math.round(ticksPerBar*.25),Math.round(ticksPerBar*.5),Math.round(ticksPerBar*.75)].forEach((x,j)=>{
+        const note=j===3?rn+12:rn;
+        bN.push({t:bar*ticksPerBar+x,d:360,note,vel:j===0?100:j===2?96:88});
+      });
+    }else if(style==='techno'){
+      const pat=r()>.5?[0,720,1200]:[0,480,960,1440];
+      pat.forEach((x,j)=>{
+        bN.push({t:bar*ticksPerBar+x,d:360,note:rn,vel:j===0?104:88});
+      });
+    }else if(['progressive','futurebass'].includes(style)){
+      [0,Math.round(ticksPerBar*.33),Math.round(ticksPerBar*.66)].forEach((x,j)=>{
+        bN.push({t:bar*ticksPerBar+x,d:420,note:j===1?rn+7:rn,vel:j===0?96:84});
+      });
+    }else if(isEDM){
+      [0,Math.round(ticksPerBar*.25),Math.round(ticksPerBar*.5),Math.round(ticksPerBar*.75)].forEach((x,j)=>{
+        const note=j===3?rn+12:rn;
+        bN.push({t:bar*ticksPerBar+x,d:360,note,vel:j===0?100:j===2?96:88});
+      });
+    }else if(style==='hiphop'){
+      bN.push({t:bar*ticksPerBar,d:720,note:rn,vel:92});
+      if(r()>.5)bN.push({t:bar*ticksPerBar+Math.round(ticksPerBar*(.5+r()*.3)),d:360,note:rn+(r()>.5?7:0),vel:80});
+    }else if(style==='rnb'){
+      const bassWalks=[[0,4,7,10,7,4,0,4],[0,3,7,10,7,3,0,5],[0,5,7,10,7,5,0,3]];
+      const walk=bassWalks[Math.floor(r()*bassWalks.length)];
+      walk.forEach((iv,i)=>{
+        const pos=Math.round(ticksPerBar*(i/8));
+        if(pos<ticksPerBar)bN.push({t:bar*ticksPerBar+pos,d:200,note:rn+iv,vel:80-Math.floor(r()*8)});
+      });
+    }else if(style==='rock'){
+      const rockBass=[[0,480,960],[0,480,960,1440],[0,720,960]];
+      const rb=rockBass[Math.floor(r()*rockBass.length)];
+      rb.forEach((x,i)=>{
+        const intervals=[0,7,12,7];
+        bN.push({t:bar*ticksPerBar+x,d:360,note:rn+intervals[i%4],vel:94-Math.floor(r()*8)});
+      });
+    }else if(style==='lofi'){
+      const walks=[[0,4,7,10,7,4],[0,3,7,10,7,3],[0,5,7,12,7,5]];
+      const walk=walks[Math.floor(r()*walks.length)];
+      walk.forEach((iv,i)=>{
+        const pos=Math.round(ticksPerBar*(i/6));
+        if(pos<ticksPerBar)bN.push({t:bar*ticksPerBar+pos,d:280,note:rn+iv,vel:72+Math.floor(r()*10)});
+      });
+    }else if(['ambient','cinematic'].includes(style)){
+      bN.push({t:bar*ticksPerBar,d:ticksPerBar-60,note:rn,vel:52});
+    }else{
+      bN.push({t:bar*ticksPerBar,d:800,note:rn,vel:86});
+      if(r()>.6)bN.push({t:bar*ticksPerBar+Math.round(ticksPerBar*.5),d:600,note:rn+(r()>.5?7:0),vel:76});
+    }
+
+    // ΓöÇΓöÇΓöÇ MELODY: genre-specific, profile-based ΓöÇΓöÇΓöÇ
+    const isAmbient=['ambient','cinematic'].includes(style);
+    let to=0,pN=null;
+    const localSwing=(bar%2===0?1:0.97);
+    const profile=melodicProfiles[style]||melodicProfiles.pop;
+    // Generate motif rhythms for each bar (varied, not identical)
+    if(bar===0){
+      const mLen=3+Math.floor(r()*2);
+      motif=[];
+      for(let i=0;i<mLen;i++){
+        if(i===0){motif.push(0)}
+        else if(r()<profile.stepChance){motif.push(motif[i-1]+([-1,1][Math.floor(r()*2)]))}
+        else if(r()<profile.leapChance){motif.push(motif[i-1]+([3,4,5,-3,-4,-5][Math.floor(r()*6)]))}
+        else{motif.push(motif[i-1])}
+        motif[i]=Math.max(0,Math.min(7,motif[i]));
+      }
+      motifRhy=[];
+      for(let b=0;b<bars;b++){
+        const barLen=3+Math.floor(r()*2);
+        const pat=profile.rhythm[Math.floor(r()*profile.rhythm.length)];
+        const shifted=pat.slice(0).concat(pat.slice(0,barLen));
+        const start=Math.floor(r()*(pat.length||1));
+        motifRhy.push(shifted.slice(start,start+barLen));
+      }
+    }
+    const mRhy=motifRhy[bar]||motifRhy[0];
+    const phrasePos=bar%4;
+    const octaveShift=Math.floor(bar/4)%3;
+    mRhy.forEach((d16,ni)=>{
+      let dT=Math.round(d16*120*localSwing);
+      if(swingAmt>0){
+        const beatInBar=Math.floor(to/ticksPerBeat);
+        if(beatInBar%2===1)dT=Math.round(dT*(1+swingAmt*0.5));
+      }
+      if(ni>0&&phrasePos===3&&ni>=mRhy.length-1&&r()<.3){to+=dT;return}
+      const sb=(to%ticksPerBeat)<120;
+      let note;
+      if(r()<profile.repeatChance&&pN!==null){note=pN}
+      else if(r()<profile.chordToneChance&&sb){note=tri[Math.floor(r()*tri.length)]}
+      else if(r()<profile.stepChance&&pN!==null){note=snapToScale(pN+([-1,0,1][Math.floor(r()*3)]))}
+      else{
+        let dOff=motif[ni%motif.length];
+        if(phrasePos===1&&r()<.6)dOff+=1;
+        else if(phrasePos===2&&r()<.5)dOff+=Math.floor(r()*2);
+        else if(phrasePos===3)dOff=Math.max(0,dOff-1);
+        note=lNote(deg+dOff,mB);
+      }
+      if(octaveShift===1&&bar>=4)note+=12;
+      if(profile.contour==='arch'){const mid=bars/2;if(bar<mid)note+=Math.floor((bar/mid)*5);else note-=Math.floor(((bar-mid)/mid)*5)}
+      else if(profile.contour==='build'){note+=Math.floor((bar/bars)*7)}
+      else if(profile.contour==='dramatic'){note+=Math.floor(Math.sin(bar/bars*Math.PI*2)*7)}
+      else if(profile.contour==='wave'){note+=Math.floor(Math.sin(bar/bars*Math.PI*4)*3)}
+      if(pN!==null){const dist=note-pN;if(Math.abs(dist)>7)note=snapToScale(pN+Math.sign(note-pN)*5)}
+      note=snapToScale(Math.max(profile.range[0],Math.min(profile.range[1],note)));
+      let vel=80;
+      const intensity=Math.min(1,bar/bars);
+      if(ni===0)vel=80+Math.floor(intensity*20);
+      else vel=58+Math.floor(intensity*16);
+      vel=applyVelocityCurve(vel,bar,bars,velCurve);
+      const aD=d16<=2?dT*.55:d16>=6?dT*.9:dT*.75;
+      mN.push({t:bar*ticksPerBar+Math.round(to),d:aD,note,vel});
+      pN=note;to+=dT
+    });
+
+    // ─── HARMONY: genre-specific counter-melodies ───
+    const hRhy=isEDM?[8,8]:style==='ambient'?[16]:style==='hiphop'?[8,4,4]:[8,4,4];
+    let hTo=0,hP=null;
+    hRhy.forEach((d16,hi)=>{
+      const hd=d16*120;
+      if(hTo+hd>ticksPerBar)return;
+      if(r()<.25){hTo+=hd;return}
+      let note;
+      const choices=[deg,deg+2,deg+4];
+      const dOff=choices[Math.floor(r()*choices.length)];
+      note=lNote(dOff,mB);
+      if(mN.length>0){
+        const lastM=mN[mN.length-1].note;
+        if(hP!==null&&lastM>hP)note=snapToScale(note-2);
+        else if(hP!==null&&lastM<hP)note=snapToScale(note+2);
+      }
+      if(hP!==null){const dist=Math.abs(note-hP);if(dist>7)note=snapToScale(hP+Math.sign(note-hP)*Math.min(dist,5))}
+      note=Math.max(48,Math.min(72,note));
+      note=snapToScale(note);
+      const hVel=style==='rnb'?56+Math.floor(r()*10):style==='ambient'?42:style==='lofi'?50+Math.floor(r()*8):52+Math.floor(r()*12);
+      hN.push({t:bar*ticksPerBar+Math.round(hTo),d:hd*.9,note,vel:applyVelocityCurve(hVel,bar,bars,velCurve)});
+      hP=note;hTo+=hd
+    });
+
+    // ─── DRUMS: genre-specific patterns based on real songs ───
+    const hit=(p,st,n,v=100,d=90)=>st.forEach(s=>p.push({t:bar*ticksPerBar+s,d,note:n,vel:v}));
+
+    if(timeSig==='3/4'){
+      hit(kN,[0],36,112,110);hit(sN,[Math.round(ticksPerBar*2/3)],38,95,100);
+    }else if(timeSig==='6/8'){
+      hit(kN,[0,Math.round(ticksPerBar/2)],36,112,110);hit(sN,[Math.round(ticksPerBar/2)],38,95,100);
+    }else if(timeSig==='5/4'){
+      hit(kN,[0,Math.round(ticksPerBar*.5)],36,112,110);hit(sN,[Math.round(ticksPerBar*.33)],38,95,100);
+    }else{
+      if(style==='house'){
+        hit(kN,[0,480,960,1440],36,112,110);
+        if(r()>.5)hit(kN,[Math.round(1680)],36,72,60);
+      }else if(style==='basshouse'){
+        hit(kN,[0,480,960,1440],36,114,110);
+        if(r()>.4)hit(kN,[Math.round(240)],36,80,60);
+      }else if(style==='progressive'){
+        hit(kN,[0,480,960,1440],36,110,110);
+        if(r()>.6)hit(kN,[Math.round(1680)],36,76,60);
+      }else if(style==='trance'){
+        hit(kN,[0,480,960,1440],36,112,110);
+        hit(kN,[240,720,1200,1680],36,60,40);
+      }else if(style==='techno'){
+        const kPat=r()>.5?[0,480,960,1440]:[0,360,960,1320];
+        hit(kN,kPat,36,114,110);
+        if(r()>.6)hit(kN,[Math.round(720)],36,68,60);
+      }else if(style==='dnb'){
+        hit(kN,[0,720,1200],36,108,100);
+        if(r()>.7)hit(kN,[Math.round(480)],36,80,60);
+      }else if(style==='dubstep'){
+        hit(kN,[0,720,1440],36,112,120);
+      }else if(style==='futurebass'){
+        hit(kN,[0,480,1200],36,106,100);
+        if(r()>.5)hit(kN,[Math.round(960)],36,72,80);
+      }else if(style==='hiphop'){
+        const kickVars=[[0,720,1320],[0,600,1200],[0,840,1320],[0,480,960]];
+        hit(kN,kickVars[Math.floor(r()*kickVars.length)],36,104,120);
+        if(r()>.6)hit(kN,[Math.round(1560)],36,72,80);
+      }else if(style==='lofi'){
+        const s=.05;
+        hit(kN,[0,Math.round(720*(1+s)),Math.round(1320*(1+s))],36,96,120);
+      }else if(style==='rock'){
+        const rockKicks=[[0,960],[0,720,960],[0,960,1440]];
+        hit(kN,rockKicks[Math.floor(r()*rockKicks.length)],36,108,110);
+        if(r()>.5)hit(kN,[Math.round(1440)],36,80,80);
+      }else if(style==='rnb'){
+        hit(kN,[0,720,1200],36,100,110);
+      }else if(style==='ambient'||style==='cinematic'){
+        if(r()>.7)hit(kN,[0],36,60,110);
+      }else{
+        hit(kN,[0,960],36,106,110);
+      }
+
+      if(style==='dnb'){
+        hit(sN,[720,1440],38,98,100);
+        if(r()>.6)hit(sN,[480],38,70,60);
+      }else if(style==='hiphop'){
+        hit(sN,[960],38,92,100);
+      }else if(style==='lofi'){
+        hit(sN,[Math.round(960*1.05)],38,85,100);
+      }else if(style==='rock'){
+        hit(sN,[960],38,98,100);
+      }else if(style==='rnb'){
+        hit(sN,[960],38,90,100);
+        if(r()>.5)hit(sN,[480,1440],38,55,60);
+      }else if(!['ambient','cinematic'].includes(style)){
+        hit(sN,[960],38,95,100);
+      }
+
+      if(style==='hiphop'){
+        hit(clN,[960],39,82,90);
+      }else if(style==='rnb'){
+        hit(clN,[960],39,75,90);
+      }else if(style==='dubstep'){
+        hit(clN,[960],39,78,90);
+      }else if(!['ambient','cinematic','rock'].includes(style)){
+        hit(clN,[960],39,78,90);
+      }
+
+      const hs=style==='dnb'?120:style==='hiphop'?120:isEDM?240:style==='lofi'?Math.round(240*1.05):style==='techno'?120:240;
+      for(let h=0;h<ticksPerBar;h+=hs){
+        if(r()>.12){
+          const hVel=style==='hiphop'?58+Math.floor(r()*20):style==='rnb'?52+Math.floor(r()*18):style==='dnb'?62+Math.floor(r()*22):58+Math.floor(r()*26);
+          const hDur=style==='dnb'?40:55;
+          cHN.push({t:bar*ticksPerBar+h,d:hDur,note:42,vel:hVel});
+        }
+      }
+
+      if(style==='dnb'){
+        if(r()>.5)cHN.push({t:bar*ticksPerBar+Math.round(ticksPerBar*.167),d:30,note:42,vel:72});
+      }
+
+      if(isEDM||style==='pop'){
+        hit(oHN,[Math.round(ticksPerBar*.375),Math.round(ticksPerBar*.875)],46,72,140);
+      }else if(style==='rock'){
+        hit(oHN,[Math.round(ticksPerBar*.75)],46,68,140);
+      }else if(style==='techno'){
+        hit(oHN,[Math.round(ticksPerBar*.5)],46,64,140);
+      }
+
+      if($('includeCrash').checked&&(isEDM||style==='rock'||style==='pop')&&(bar%4===0||bar===bars-1)){
+        hit(crN,[0],49,104,260);
+      }
+
+      if($('includeRide').checked&&['trance','techno','dnb','progressive','rock'].includes(style)){
+        const rs=style==='dnb'?240:style==='techno'?120:480;
+        for(let ra=0;ra<ticksPerBar;ra+=rs)rN.push({t:bar*ticksPerBar+ra,d:100,note:51,vel:68});
+      }
+    }
+    // ─── PADS: genre-specific sustained chords ───
+    const padVoiced=[ct(0),ct(2),ct(4)];
+    if(chordExt==='maj9'||chordExt==='dom7'||chordExt==='maj7')padVoiced.push(ct(6));
+    if(chordExt==='maj9')padVoiced.push(ct(8));
+    let padNotes;
+    if(style==='ambient'||style==='cinematic'){
+      padNotes=padVoiced.map((n,i)=>snapToScale(i%2===0?n+12:n+24));
+    }else if(style==='rnb'||style==='lofi'){
+      padNotes=padVoiced.map((n,i)=>snapToScale(i===0?n+12:i%2===1?n+12:n+24));
+    }else if(style==='trance'){
+      padNotes=padVoiced.map((n,i)=>snapToScale(i%2===0?n+12:n+12));
+    }else if(style==='futurebass'){
+      padNotes=padVoiced.map((n,i)=>snapToScale(i%2===0?n+12:n+24));
+    }else{
+      padNotes=padVoiced.map((n,i)=>snapToScale(i%2===0?n+12:n+24));
+    }
+    const padVel=style==='ambient'?48:style==='cinematic'?50:style==='rnb'?46:style==='lofi'?44:style==='trance'?52:style==='futurebass'?50:45;
+    padNotes.forEach((n,i)=>{pdN.push({t:bar*ticksPerBar,d:ticksPerBar-i*30,note:n,vel:applyVelocityCurve(padVel+Math.floor(r()*6),bar,bars,velCurve)})});
+  });
+
+  mN.forEach(n=>n.note=snapToScale(n.note));
+  hN.forEach(n=>n.note=snapToScale(n.note));
+  cN.forEach(n=>n.note=snapToScale(n.note));
+  bN.forEach(n=>n.note=snapToScale(n.note));
+  aN.forEach(n=>n.note=snapToScale(n.note));
+  pdN.forEach(n=>n.note=snapToScale(n.note));
+
+  const sk=$('key').value.replace('\u266F','sharp').replace('/','-').replace('\u266D','flat'),tag=`${sk}_${$('scale').value}_${tempo}bpm`;
+  const tempoArr=tempoArray||null;
+  files={melody:{name:`melody_${tag}.mid`,data:midi(n2e(mN),tempo,0,0,tempoArr,bars)},harmony:{name:`harmony-melody_${tag}.mid`,data:midi(n2e(hN),tempo,48,0,tempoArr,bars)},chords:{name:`chords_${tag}.mid`,data:midi(n2e(cN),tempo,4,0,tempoArr,bars)},bass:{name:`bass_${tag}.mid`,data:midi(n2e(bN),tempo,33,0,tempoArr,bars)},arp:{name:`arpeggiator_${tag}.mid`,data:midi(n2e(aN),tempo,81,0,tempoArr,bars)},pads:{name:`pads_${tag}.mid`,data:midi(n2e(pdN),tempo,89,0,tempoArr,bars)},kick:{name:`kick_${tag}.mid`,data:midi(n2e(kN),tempo,0,9,tempoArr,bars)},snare:{name:`snare_${tag}.mid`,data:midi(n2e(sN),tempo,0,9,tempoArr,bars)},clap:{name:`clap_${tag}.mid`,data:midi(n2e(clN),tempo,0,9,tempoArr,bars)},closedHat:{name:`closed-hihat_${tag}.mid`,data:midi(n2e(cHN),tempo,0,9,tempoArr,bars)},openHat:{name:`open-hihat_${tag}.mid`,data:midi(n2e(oHN),tempo,0,9,tempoArr,bars)},crash:{name:`crash-cymbal_${tag}.mid`,data:midi(n2e(crN),tempo,0,9,tempoArr,bars)},ride:{name:`ride-cymbal_${tag}.mid`,data:midi(n2e(rN),tempo,0,9,tempoArr,bars)}};
+  ['melody','harmony','chords','bass','arp','pads','all','kick','snare','clap','closedHat','openHat','crash','ride'].forEach(id=>$(id).disabled=false);
+  const tempoNote=hasTempoAutomation?` (${startBpm}ΓåÆ${endBpm} BPM)`:'';
+  $('status').textContent=`Generated ${bars} bars in ${$('key').value} ${$('scale').options[$('scale').selectedIndex].text} at ${tempo} BPM${tempoNote}.`;
+  $('status').className='status ok'
+}
+
+$('seed').value=Math.floor(Math.random()*99999999)+1;
+$('style').onchange=()=>{$('edmWrap').style.display=$('style').value==='edm'?'':'none'};
+$('swing').oninput=()=>{$('swingVal').textContent=$('swing').value+'%'};
+$('chordProg').onchange=()=>{$('customProgWrap').style.display=$('chordProg').value==='custom'?'':'none'};
+$('generate').onclick=generate;
+['melody','harmony','chords','bass','arp','pads','kick','snare','clap','closedHat','openHat','crash','ride'].forEach(id=>$(id).onclick=()=>dl(files[id].name,files[id].data));
+$('all').onclick=()=>saveFolder(['melody','harmony','chords','bass','arp','pads'],['kick','snare','clap','closedHat','openHat','crash','ride'],'all music');
+})();
+</script>
+</body>
+</html>

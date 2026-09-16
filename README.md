@@ -9,15 +9,27 @@ A professional, browser-based MIDI composition generator that creates genre-awar
 - **15+ Genres:** Pop, EDM (8 sub-genres), Ambient, Hip-hop, Lo-fi, Cinematic, R&B, Rock
 - **6 Musical Parts:** Melody, Harmony, Chords, Bass, Arpeggiator, Drums
 - **Smart Composition:** Motif development, phrase structure, chord tone targeting, leap resolution
-- **Unusual Chords:** Maj9, 7#11, quartal voicings, chromatic mediants, clusters
+- **Extended Voicings:** Maj9, 7#11, add9, sus4, quartal voicings, chromatic mediants
 - **Individual Downloads:** Export each part as separate MIDI files
 - **Folder Export:** Save all parts into organized folders with drums subfolder
 - **Deterministic:** Seed-based RNG for reproducible compositions
 - **Zero Dependencies:** Pure HTML/CSS/JavaScript, no server required
 
+## Version 2 (index-v2.html)
+
+Enhanced version with advanced composition features:
+
+- **Swing/Groove** — Humanized timing with adjustable swing percentage
+- **Velocity Curves** — Expressive dynamic shaping (linear, crescendo, decrescendo, swell)
+- **45+ Chord Progressions** — Pre-built progressions organized by genre + custom input
+- **Scale Extensions** — Pentatonic, blues, whole tone, diminished, chromatic
+- **Tempo Automation** — BPM changes within a composition (start/end BPM)
+- **Time Signatures** — 3/4, 4/4, 6/8, 5/4 support
+- **Per-bar Melody Variation** — Different rhythm patterns per bar (not identical repeat)
+
 ## Quick Start
 
-1. Open `index.html` in any modern browser
+1. Open `index.html` (v1) or `index-v2.html` (v2) in any modern browser
 2. Select genre, key, scale, tempo
 3. Click **Generate Parts**
 4. Download individual tracks or save all to folder
@@ -40,65 +52,36 @@ A professional, browser-based MIDI composition generator that creates genre-awar
 | Part | MIDI Program | Description |
 |------|--------------|-------------|
 | Melody | Piano (0) | Lead with motif development, phrase structure |
-| Harmony | Strings (48) | Simple counter-melody, contrary motion |
-| Chords | Electric Piano (4) | Extended voicings, genre-specific |
-| Bass | Fingered Bass (33) | Root-driven, genre patterns |
+| Harmony | Strings (48) | Counter-melody, contrary motion, leap limits |
+| Chords | Electric Piano (4) | Extended voicings, genre-specific inversions |
+| Bass | Fingered Bass (33) | Genre-specific: dotted 8th (EDM), walking (R&B), power (rock) |
 | Arpeggiator | Synth Lead (81) | Rhythmic chord sequence |
+| Pads | Synth Pad (89) | Sustained chord tones, ambient textures |
 | Drums | GM Percussion (Ch.9) | Kick, snare, clap, hats, crash, ride |
 
-## Roadmap
+## Python Backend
 
-### Phase 1: Core (Complete)
-- [x] Basic MIDI generation
-- [x] Multiple genres with unique patterns
-- [x] Melody with motif development
-- [x] Harmony counter-melody
-- [x] Extended chord voicings
-- [x] Bass patterns per genre
-- [x] Arpeggiator
-- [x] Full drum kit
-- [x] Individual track downloads
-- [x] Folder export with subfolders
-- [x] Seed-based reproducibility
-- [x] Professional dark UI
+CLI tool using music21 for advanced MIDI generation:
 
-### Phase 2: Enhanced Composition
-- [ ] **Swing/Groove** — Add humanized timing with swing percentage
-- [ ] **Velocity Curves** — More expressive dynamic shaping
-- [ ] **Chord Progression Editor** — Custom progression input (I-V-vi-IV, etc.)
-- [ ] **Scale Extensions** — Pentatonic, blues, whole tone, diminished, chromatic
-- [ ] **Tempo Automation** — BPM changes within a composition
-- [ ] **Time Signature** — 3/4, 6/8, 5/4 support
+```bash
+# Interactive mode (double-click or run without args)
+python generate.py
 
-### Phase 3: Arrangement
-- [ ] **Song Structure** — Intro, verse, chorus, bridge, outro templates
-- [ ] **Section Markers** — Label and navigate sections
-- [ ] **Arrangement View** — Visual timeline of all parts
-- [ ] **Part Muting** — Toggle individual parts on/off
-- [ ] **Volume Mixer** — Per-track volume control
-- [ ] **Pan Control** — Stereo positioning per track
+# Command line mode
+python generate.py --style pop --key C --bars 8 --seed 42 --output output
+```
 
-### Phase 4: Advanced Features
-- [ ] **Undo/Redo** — History stack for edits
-- [ ] **Preset System** — Save and load favorite configurations
-- [ ] **Import MIDI** — Load existing MIDI files for reference
-- [ ] **Quantization** — Snap notes to grid with configurable strength
-- [ ] **Humanize** — Add random timing/velocity variation
-- [ ] **Transposition** — Shift key without regenerating
+## Research-Based Improvements
 
-### Phase 5: Collaboration & Export
-- [ ] **Share Links** — URL-encoded settings for sharing
-- [ ] **Export WAV** — Render audio using Web Audio API
-- [ ] **Export PDF** — Sheet music notation
-- [ ] **Collaborative Editing** — Real-time multi-user (WebSocket)
-- [ ] **Version History** — Save and compare versions
+Chord progressions and patterns based on analysis of professional songs:
 
-### Phase 6: Desktop & Mobile
-- [ ] **PWA Support** — Install as Progressive Web App
-- [ ] **Offline Mode** — Full functionality without internet
-- [ ] **Mobile Optimized** — Touch-friendly interface
-- [ ] **Electron Wrapper** — Desktop app for Windows/Mac/Linux
-- [ ] **Audio Preview** — Built-in synth for instant playback
+- **Pop:** I-V-vi-IV (Let It Be, Someone Like You), vi-IV-I-V (Zombie, Numb)
+- **Hip-hop:** i-VI-III-VII (trap), i-VII-VI-VII (dark) — Travis Scott, J Cole
+- **R&B:** I-vi-IV-V, walking bass — Alicia Keys, Daniel Caesar
+- **EDM:** i-III-VII-VI (Avicii Levels), i-VI-iv (Calvin Harris)
+- **Cinematic:** Chromatic mediants, Lydian mode, pedal tones — Hans Zimmer, John Williams
+- **Rock:** I-IV-V-I, power chords — Led Zeppelin, Nirvana
+- **Lo-fi:** ii-V-I (jazzy), swing timing
 
 ## Technical Details
 
