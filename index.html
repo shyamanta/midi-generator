@@ -353,7 +353,7 @@ function tsFolder(g,k,b){const d=new Date(),p=n=>String(n).padStart(2,'0'),c=v=>
 async function saveFolder(ids,drumIds,label){
   const all=[...ids,...drumIds];
   if(!window.showDirectoryPicker){all.forEach((id,i)=>setTimeout(()=>dl(files[id].name,files[id].data),i*300));$('status').textContent='Folder API unavailable G�� files downloaded individually.';return}
-  try{$('status').textContent='Choose a folder...';const root=await window.showDirectoryPicker({mode:'readwrite'});const sel=$('style').value==='edm'♫$('edmStyle').value:$('style').value;const folder=await root.getDirectoryHandle(tsFolder(sel,$('key').value,$('tempo').value),{create:true});for(const id of ids){if(!files[id]||!files[id].data)continue;const f=await folder.getFileHandle(files[id].name,{create:true});const s=await f.createWritable();await s.write(files[id].data);await s.close()}if(drumIds.length){const df=await folder.getDirectoryHandle('Drums',{create:true});for(const id of drumIds){if(!files[id]||!files[id].data)continue;const f=await df.getFileHandle(files[id].name,{create:true});const s=await f.createWritable();await s.write(files[id].data);await s.close()}}$('status').textContent=`Saved to ${root.name}\\${folder.name}`;$('status').className='status ok'}catch(e){$('status').textContent=e.name==='AbortError'♫'Cancelled.':`Error: ${e.message}`}
+  try{$('status').textContent='Choose a folder...';const root=await window.showDirectoryPicker({mode:'readwrite'});const sel=$('style').value==='edm'?$('edmStyle').value:$('style').value;const folder=await root.getDirectoryHandle(tsFolder(sel,$('key').value,$('tempo').value),{create:true});for(const id of ids){if(!files[id]||!files[id].data)continue;const f=await folder.getFileHandle(files[id].name,{create:true});const s=await f.createWritable();await s.write(files[id].data);await s.close()}if(drumIds.length){const df=await folder.getDirectoryHandle('Drums',{create:true});for(const id of drumIds){if(!files[id]||!files[id].data)continue;const f=await df.getFileHandle(files[id].name,{create:true});const s=await f.createWritable();await s.write(files[id].data);await s.close()}}$('status').textContent=`Saved to ${root.name}\\${folder.name}`;$('status').className='status ok'}catch(e){$('status').textContent=e.name==='AbortError'♫'Cancelled.':`Error: ${e.message}`}
 }
 
 function parseProgression(str){
@@ -424,11 +424,11 @@ function midi(events,tempo,prog,ch=0,tempoArray,bars){
 }
 
 function generate(){
-  const root=keyRoots[$('key').selectedIndex],sc=scales[$('scale').value],bars=+$('bars').value,tempo=+$('tempo').value,style=$('style').value==='edm'♫$('edmStyle').value:$('style').value,r=rng(+$('seed').value||1),mB=+$('melodyOct').value+root,bB=+$('bassOct').value+root,isEDM=['house','basshouse','progressive','dubstep','trance','futurebass','techno','dnb'].includes(style);
+  const root=keyRoots[$('key').selectedIndex],sc=scales[$('scale').value],bars=+$('bars').value,tempo=+$('tempo').value,style=$('style').value==='edm'?$('edmStyle').value:$('style').value,r=rng(+$('seed').value||1),mB=+$('melodyOct').value+root,bB=+$('bassOct').value+root,isEDM=['house','basshouse','progressive','dubstep','trance','futurebass','techno','dnb'].includes(style);
 
   const swingAmt=+$('swing').value/100;
   const velCurve=$('velCurve').value;
-  const customProg=parseProgression($('chordProg').value==='custom'♫$('customProg').value:$('chordProg').value);
+  const customProg=parseProgression($('chordProg').value==='custom'?$('customProg').value:$('chordProg').value);
   const timeSig=$('timeSig').value;
   const startBpm=+$('startBpm').value;
   const endBpm=+$('endBpm').value;
@@ -880,9 +880,9 @@ function generate(){
 }
 
 $('seed').value=Math.floor(Math.random()*99999999)+1;
-$('style').onchange=()=>{$('edmWrap').style.display=$('style').value==='edm'♫'':'none'};
+$('style').onchange=()=>{$('edmWrap').style.display=$('style').value==='edm'?'':'none'};
 $('swing').oninput=()=>{$('swingVal').textContent=$('swing').value+'%'};
-$('chordProg').onchange=()=>{$('customProgWrap').style.display=$('chordProg').value==='custom'♫'':'none'};
+$('chordProg').onchange=()=>{$('customProgWrap').style.display=$('chordProg').value==='custom'?'':'none'};
 $('generate').onclick=generate;
 ['melody','harmony','chords','bass','arp','pads','kick','snare','clap','closedHat','openHat','crash','ride'].forEach(id=>$(id).onclick=()=>dl(files[id].name,files[id].data));
 $('all').onclick=()=>saveFolder(['melody','harmony','chords','bass','arp','pads'],['kick','snare','clap','closedHat','openHat','crash','ride'],'all music');
