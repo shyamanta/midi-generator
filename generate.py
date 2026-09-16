@@ -68,22 +68,24 @@ def build_chord(root_midi, ext, scale_pitches):
 
 def generate_melody(scale_pitches, profile, bars, rng, base_octave=60):
     s = stream.Stream()
-    pos = 0.0
-    prev = base_octave
+    lo, hi = profile["melody_range"]
+    pool = [snap_to_scale(base_octave + i, scale_pitches)
+            for i in range(-8, 9) if lo <= snap_to_scale(base_octave + i, scale_pitches) <= hi]
+    if not pool:
+        pool = [base_octave, base_octave+2, base_octave+4, base_octave+5, base_octave+7]
+    prev = rng.choice(pool)
     for bar in range(bars):
         rhy = rng.choice(RHYTHM_POOLS)
         for d in rhy:
             dur = d * 0.25
-            if rng.random() < profile["step"]:
-                step = rng.choice([-1, 0, 1])
-                n = snap_to_scale(prev + step, scale_pitches)
-            elif rng.random() < (1 - profile["chord_tone"]):
-                leap = rng.choice([-3,-2,2,3])
-                n = snap_to_scale(prev + leap, scale_pitches)
+            if rng.random() < profile["chord_tone"]:
+                n = rng.choice(pool)
+            elif rng.random() < profile["step"]:
+                idx = pool.index(prev) if prev in pool else len(pool)//2
+                idx = max(0, min(len(pool)-1, idx + rng.choice([-1,1])))
+                n = pool[idx]
             else:
-                n = rng.choice([snap_to_scale(base_octave + i, scale_pitches)
-                                for i in range(-5, 6)])
-            n = max(profile["melody_range"][0], min(profile["melody_range"][1], n))
+                n = rng.choice(pool)
             note_obj = note.Note(n, quarterLength=dur)
             note_obj.volume.velocity = rng.randint(60, 100)
             s.append(note_obj)
