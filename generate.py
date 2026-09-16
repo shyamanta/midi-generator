@@ -158,6 +158,21 @@ def generate(style, key_name, bars, seed, output_dir):
         part.write("midi", path)
         print(f"  Written: {path}")
 
+def interactive():
+    print("=== MIDI Generator ===")
+    print("Genres:", ", ".join(GENRES.keys()))
+    print("Keys: C, D, E, F, G, A, B (+ sharps/flats)")
+    print()
+    style = input("Genre [pop]: ").strip() or "pop"
+    key_name = input("Key [C]: ").strip() or "C"
+    bars = int(input("Bars [8]: ").strip() or "8")
+    seed = int(input("Seed [42]: ").strip() or "42")
+    output = input("Output folder [output]: ").strip() or "output"
+    print()
+    generate(style, key_name, bars, seed, output)
+    print("\nDone. Press Enter to exit.")
+    input()
+
 def main():
     parser = argparse.ArgumentParser(description="MIDI Generator - Python backend")
     parser.add_argument("--style", default="pop", choices=list(GENRES.keys()))
@@ -165,10 +180,14 @@ def main():
     parser.add_argument("--bars", type=int, default=8)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--output", default="output")
+    parser.add_argument("--interactive", "-i", action="store_true", help="Interactive mode")
     args = parser.parse_args()
-    print(f"Generating {args.style} in {args.key}, {args.bars} bars, seed={args.seed}")
-    generate(args.style, args.key, args.bars, args.seed, args.output)
-    print("Done.")
+    if args.interactive:
+        interactive()
+    else:
+        print(f"Generating {args.style} in {args.key}, {args.bars} bars, seed={args.seed}")
+        generate(args.style, args.key, args.bars, args.seed, args.output)
+        print("Done.")
 
 if __name__ == "__main__":
     main()
