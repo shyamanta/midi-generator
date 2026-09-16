@@ -30,3 +30,6 @@ npm-debug.log*
 # Environment
 .env
 .env.local
+
+# v3 (local only, not pushed)
+index-v3.html
