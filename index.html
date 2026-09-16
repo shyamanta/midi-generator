@@ -390,7 +390,7 @@ function getTempoForBar(bar,bars,startBpm,endBpm){
 function midi(events,tempo,prog,ch=0,tempoArray,bars){
   const us=Math.round(60000000/tempo);
   const cond=[0,0xFF,0x51,3,(us>>>16)&255,(us>>>8)&255,us&255,0,0xFF,0x58,4,4,2,24,8,0,0xFF,0x2F,0];
-  let o=[0,0xC0|ch,prog];
+  let o=[0,0xC0|ch,prog];let at=0;
   if(tempoArray&&bars>1){
     let tempoAt=0;let tempoTick=0;
     const tempoEvents=[];
@@ -401,7 +401,7 @@ function midi(events,tempo,prog,ch=0,tempoArray,bars){
       tempoEvents.push({tick:tempoTick,us:bUs});
     }
     events.sort((a,b)=>a.time-b.time||a.kind-b.kind);
-    let ei=0;let at=0;
+    let ei=0;
     events.forEach(e=>{
       while(ei<tempoEvents.length&&tempoEvents[ei].tick<=e.time){
         o.push(...vlq(tempoEvents[ei].tick-at),0xFF,0x51,3,(tempoEvents[ei].us>>>16)&255,(tempoEvents[ei].us>>>8)&255,tempoEvents[ei].us&255);
