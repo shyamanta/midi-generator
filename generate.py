@@ -175,19 +175,19 @@ def interactive():
 
 def main():
     parser = argparse.ArgumentParser(description="MIDI Generator - Python backend")
-    parser.add_argument("--style", default="pop", choices=list(GENRES.keys()))
-    parser.add_argument("--key", default="C", help="Key (C, D, E, F, G, A, B)")
-    parser.add_argument("--bars", type=int, default=8)
-    parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument("--output", default="output")
-    parser.add_argument("--interactive", "-i", action="store_true", help="Interactive mode")
+    parser.add_argument("--style", default=None, choices=list(GENRES.keys()))
+    parser.add_argument("--key", default=None, help="Key (C, D, E, F, G, A, B)")
+    parser.add_argument("--bars", type=int, default=None)
+    parser.add_argument("--seed", type=int, default=None)
+    parser.add_argument("--output", default=None)
     args = parser.parse_args()
-    if args.interactive:
+    if args.style is None:
         interactive()
     else:
-        print(f"Generating {args.style} in {args.key}, {args.bars} bars, seed={args.seed}")
-        generate(args.style, args.key, args.bars, args.seed, args.output)
+        print(f"Generating {args.style} in {args.key or 'C'}, {args.bars or 8} bars, seed={args.seed or 42}")
+        generate(args.style, args.key or "C", args.bars or 8, args.seed or 42, args.output or "output")
         print("Done.")
+        input("Press Enter to exit...")
 
 if __name__ == "__main__":
     main()
