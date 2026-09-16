@@ -71,18 +71,6 @@ python generate.py
 python generate.py --style pop --key C --bars 8 --seed 42 --output output
 ```
 
-## Research-Based Improvements
-
-Chord progressions and patterns based on analysis of professional songs:
-
-- **Pop:** I-V-vi-IV (Let It Be, Someone Like You), vi-IV-I-V (Zombie, Numb)
-- **Hip-hop:** i-VI-III-VII (trap), i-VII-VI-VII (dark) — Travis Scott, J Cole
-- **R&B:** I-vi-IV-V, walking bass — Alicia Keys, Daniel Caesar
-- **EDM:** i-III-VII-VI (Avicii Levels), i-VI-iv (Calvin Harris)
-- **Cinematic:** Chromatic mediants, Lydian mode, pedal tones — Hans Zimmer, John Williams
-- **Rock:** I-IV-V-I, power chords — Led Zeppelin, Nirvana
-- **Lo-fi:** ii-V-I (jazzy), swing timing
-
 ## Technical Details
 
 - **Single HTML file** — No build step, no dependencies
